@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model User {
+  id            String         @id @default(uuid())
+  supabaseId    String         @unique
+  email         String         @unique
+  name          String?
+  phone         String?
+  role          Role           @default(USER)
+  bookings      Booking[]
+  subscriptions Subscription[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model BusinessSettings {
+  id        String   @id @default(uuid())
+  name      String
+  logoUrl   String?
+  siteTitle String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Pitch {
+  id                  String         @id @default(uuid())
+  name                String
+  description         String?
+  openTime            String
+  closeTime           String
+  slotDurationMinutes Int            @default(60)
+  slotOffsetMinutes   Int            @default(0)
+  bookings            Booking[]
+  subscriptions       Subscription[]
+  isActive            Boolean        @default(true)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model Booking {
+  id        String        @id @default(uuid())
+  pitchId   String
+  pitch     Pitch         @relation(fields: [pitchId], references: [id])
+  userId    String?
+  user      User?         @relation(fields: [userId], references: [id])
+  date      DateTime      @db.Date
+  startTime String
+  endTime   String
+  status    BookingStatus @default(CONFIRMED)
+  isManual  Boolean       @default(false)
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model Subscription {
+  id        String    @id @default(uuid())
+  pitchId   String
+  pitch     Pitch     @relation(fields: [pitchId], references: [id])
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id])
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  startDate DateTime  @db.Date
+  endDate   DateTime? @db.Date
+  isActive  Boolean   @default(true)
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
