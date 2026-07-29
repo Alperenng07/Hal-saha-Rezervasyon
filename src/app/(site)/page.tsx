@@ -1,11 +1,12 @@
-import { getBusinessSettings, getPitches, getBookings } from "@/lib/data";
+import { getBusinessSettings, getPitches, getBookings, getActiveSubscriptions } from "@/lib/data";
 import WeeklyCalendar from "@/components/weekly-calendar";
 
 export default async function Home() {
-  const [settings, pitches, bookings] = await Promise.all([
+  const [settings, pitches, bookings, subscriptions] = await Promise.all([
     getBusinessSettings(),
     getPitches(),
     getBookings(),
+    getActiveSubscriptions(),
   ]);
 
   const businessName = settings?.name ?? "Halı Saha Tesisleri";
@@ -46,7 +47,11 @@ export default async function Home() {
         ) : (
           <div className="relative max-w-6xl mx-auto rounded-2xl sm:rounded-3xl p-0.5 sm:p-1 bg-gradient-to-b from-slate-200/50 to-transparent shadow-xl sm:shadow-2xl shadow-slate-200/50">
             <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl blur opacity-20 pointer-events-none" />
-            <WeeklyCalendar pitches={pitches} initialBookings={bookings} />
+            <WeeklyCalendar
+              pitches={pitches}
+              initialBookings={bookings}
+              subscriptions={subscriptions}
+            />
           </div>
         )}
 

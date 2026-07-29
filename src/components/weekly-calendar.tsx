@@ -8,13 +8,13 @@ import {
   startOfWeek,
   isSameDay,
   parse,
-  addMinutes,
   isBefore,
-  isAfter,
   startOfDay,
+  getDay,
 } from "date-fns";
 import { tr } from "date-fns/locale";
 import { createBooking } from "@/lib/actions/bookings";
+import { generateSlots, normalizeTime } from "@/lib/slots";
 
 type Pitch = {
   id: string;
@@ -34,9 +34,19 @@ type Booking = {
   status: string;
 };
 
+type Subscription = {
+  pitchId: string;
+  dayOfWeek: number;
+  startTime: string;
+  startDate: Date;
+  endDate: Date | null;
+  isActive: boolean;
+};
+
 interface WeeklyCalendarProps {
   pitches: Pitch[];
   initialBookings: Booking[];
+  subscriptions?: Subscription[];
 }
 
 interface SelectedSlot {
@@ -46,13 +56,10 @@ interface SelectedSlot {
   pitchName: string;
 }
 
-function normalizeTime(time: string): string {
-  return time.trim().slice(0, 5);
-}
-
 export default function WeeklyCalendar({
   pitches,
   initialBookings,
+  subscriptions = [],
 }: WeeklyCalendarProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -81,47 +88,6 @@ export default function WeeklyCalendar({
 
   const pitch = pitches.find((p) => p.id === selectedPitch);
 
-  const generateSlots = (p: Pitch) => {
-    if (!p) return [];
-
-    const openTime = normalizeTime(p.openTime);
-    const closeTime = normalizeTime(p.closeTime);
-    const duration = p.slotDurationMinutes || 60;
-    const offset = p.slotOffsetMinutes || 0;
-
-    if (!openTime || !closeTime || duration <= 0) return [];
-
-    const base = startOfDay(new Date());
-    let current = parse(openTime, "HH:mm", base);
-    let end = parse(closeTime, "HH:mm", base);
-
-    if (Number.isNaN(current.getTime()) || Number.isNaN(end.getTime())) {
-      return [];
-    }
-
-    // Kapanış saati açılıştan önceyse (örn. 18:00–00:00) ertesi güne taşınır
-    if (!isBefore(current, end)) {
-      end = addDays(end, 1);
-    }
-
-    current = addMinutes(current, offset);
-
-    const slots: { startTime: string; endTime: string }[] = [];
-
-    while (isBefore(current, end)) {
-      const slotEnd = addMinutes(current, duration);
-      if (isAfter(slotEnd, end)) break;
-
-      slots.push({
-        startTime: format(current, "HH:mm"),
-        endTime: format(slotEnd, "HH:mm"),
-      });
-      current = slotEnd;
-    }
-
-    return slots;
-  };
-
   const slots = pitch ? generateSlots(pitch) : [];
 
   const handlePrevWeek = () => setCurrentDate(addDays(currentDate, -7));
@@ -133,6 +99,19 @@ export default function WeeklyCalendar({
         b.pitchId === selectedPitch &&
         isSameDay(new Date(b.date), date) &&
         normalizeTime(b.startTime) === startTime
+    );
+  };
+
+  const isSlotSubscribed = (date: Date, startTime: string) => {
+    const day = startOfDay(date);
+    return subscriptions.some(
+      (s) =>
+        s.isActive &&
+        s.pitchId === selectedPitch &&
+        s.dayOfWeek === getDay(date) &&
+        normalizeTime(s.startTime) === startTime &&
+        !isBefore(day, startOfDay(new Date(s.startDate))) &&
+        (!s.endDate || !isBefore(startOfDay(new Date(s.endDate)), day))
     );
   };
 
@@ -275,6 +254,7 @@ export default function WeeklyCalendar({
           <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-0.5">
             {slots.map((slot) => {
               const booked = isSlotBooked(selectedDay, slot.startTime);
+              const subscribed = isSlotSubscribed(selectedDay, slot.startTime);
               const isPast = isSlotPast(selectedDay, slot.startTime);
               return (
                 <div
@@ -287,6 +267,10 @@ export default function WeeklyCalendar({
                   {booked ? (
                     <div className="flex-1 py-2.5 bg-rose-50 border border-rose-100 text-rose-600 rounded-lg text-center font-bold text-xs">
                       DOLU
+                    </div>
+                  ) : subscribed ? (
+                    <div className="flex-1 py-2.5 bg-blue-50 border border-blue-100 text-blue-700 rounded-lg text-center font-bold text-xs">
+                      ABONE
                     </div>
                   ) : isPast ? (
                     <div className="flex-1 py-2.5 bg-slate-50 text-slate-400 rounded-lg text-center font-medium text-xs border border-dashed border-slate-200">
@@ -360,6 +344,7 @@ export default function WeeklyCalendar({
                 </td>
                 {weekDays.map((day, j) => {
                   const booked = isSlotBooked(day, slot.startTime);
+                  const subscribed = isSlotSubscribed(day, slot.startTime);
                   const isPast = isSlotPast(day, slot.startTime);
                   const isToday = isSameDay(day, new Date());
                   return (
@@ -370,6 +355,10 @@ export default function WeeklyCalendar({
                       {booked ? (
                         <div className="absolute inset-1.5 bg-rose-50 border border-rose-100 text-rose-600 rounded-lg flex items-center justify-center font-bold text-xs shadow-sm">
                           DOLU
+                        </div>
+                      ) : subscribed ? (
+                        <div className="absolute inset-1.5 bg-blue-50 border border-blue-100 text-blue-700 rounded-lg flex items-center justify-center font-bold text-xs shadow-sm">
+                          ABONE
                         </div>
                       ) : isPast ? (
                         <div className="absolute inset-1.5 bg-slate-50/80 text-slate-400 rounded-lg flex items-center justify-center font-medium text-xs border border-dashed border-slate-200">

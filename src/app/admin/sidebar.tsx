@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarDays,
+  CalendarCheck,
+  Users,
   Settings,
   LogOut,
   Menu,
@@ -30,6 +32,8 @@ export default function Sidebar({ adminName, adminEmail }: SidebarProps) {
 
   const navLinks = [
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/admin/bookings", icon: CalendarCheck, label: "Rezervasyonlar" },
+    { href: "/admin/subscriptions", icon: Users, label: "Abonelikler" },
     { href: "/admin/pitches", icon: CalendarDays, label: "Sahalar & Saatler" },
     { href: "/admin/settings", icon: Settings, label: "İşletme Ayarları" },
   ];
@@ -83,7 +87,10 @@ export default function Sidebar({ adminName, adminEmail }: SidebarProps) {
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {navLinks.map((link) => {
             const Icon = link.icon;
-            const isActive = pathname === link.href;
+            const isActive =
+              link.href === "/admin"
+                ? pathname === "/admin"
+                : pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}

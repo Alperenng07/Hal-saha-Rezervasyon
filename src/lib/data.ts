@@ -59,3 +59,37 @@ export async function getUpcomingBookings(limit = 10) {
     take: limit,
   });
 }
+
+export async function getAdminBookings() {
+  return prisma.booking.findMany({
+    where: {
+      status: { in: ["CONFIRMED", "PENDING"] },
+    },
+    include: {
+      pitch: { select: { name: true } },
+      user: { select: { name: true, email: true, phone: true } },
+    },
+    orderBy: [{ date: "desc" }, { startTime: "asc" }],
+  });
+}
+
+export async function getActiveSubscriptions() {
+  return prisma.subscription.findMany({
+    where: { isActive: true },
+    include: {
+      pitch: { select: { name: true } },
+      user: { select: { name: true, email: true, phone: true } },
+    },
+    orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
+  });
+}
+
+export async function getAdminSubscriptions() {
+  return prisma.subscription.findMany({
+    include: {
+      pitch: { select: { name: true } },
+      user: { select: { name: true, email: true, phone: true } },
+    },
+    orderBy: [{ isActive: "desc" }, { dayOfWeek: "asc" }, { startTime: "asc" }],
+  });
+}
