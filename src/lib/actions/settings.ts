@@ -15,6 +15,9 @@ export async function updateBusinessSettings(input: {
   email?: string;
   adminEmail?: string;
   themeColor?: string;
+  notifyEmailOnBooking?: boolean;
+  notifyWhatsAppOnBooking?: boolean;
+  whatsappApiKey?: string;
 }): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin) return { error: "Yetkisiz işlem." };
@@ -34,6 +37,9 @@ export async function updateBusinessSettings(input: {
     email: input.email?.trim() || null,
     adminEmail,
     themeColor,
+    notifyEmailOnBooking: input.notifyEmailOnBooking ?? true,
+    notifyWhatsAppOnBooking: input.notifyWhatsAppOnBooking ?? false,
+    whatsappApiKey: input.whatsappApiKey?.trim() || null,
   };
 
   const existing = await prisma.businessSettings.findFirst();

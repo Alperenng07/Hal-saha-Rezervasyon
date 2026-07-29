@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { notifyOwnerNewBooking } from "@/lib/notifications";
 
 type ActionResult = { success: true } | { error: string };
 
@@ -77,6 +78,29 @@ export async function createBooking(input: {
     });
   } catch {
     return { error: "Rezervasyon oluşturulamadı. Saat dolu olabilir." };
+  }
+
+  const settings = await prisma.businessSettings.findFirst();
+  if (settings) {
+    notifyOwnerNewBooking(
+      {
+        businessName: settings.name,
+        adminEmail: settings.adminEmail ?? settings.email,
+        phone: settings.phone,
+        notifyEmailOnBooking: settings.notifyEmailOnBooking,
+        notifyWhatsAppOnBooking: settings.notifyWhatsAppOnBooking,
+        whatsappApiKey: settings.whatsappApiKey,
+      },
+      {
+        pitchName: pitch.name,
+        date: bookingDate,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        guestName: name,
+        guestPhone: phone,
+        notes: input.notes,
+      }
+    ).catch((err) => console.error("[createBooking] Bildirim hatası:", err));
   }
 
   revalidatePath("/");

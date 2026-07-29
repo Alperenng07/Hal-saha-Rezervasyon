@@ -37,9 +37,12 @@ model BusinessSettings {
   siteTitle  String
   phone      String?
   email      String?
-  adminEmail String?
-  themeColor String   @default("emerald")
-  createdAt  DateTime @default(now())
+  adminEmail              String?
+  themeColor              String   @default("emerald")
+  notifyEmailOnBooking    Boolean  @default(true)
+  notifyWhatsAppOnBooking Boolean  @default(false)
+  whatsappApiKey          String?
+  createdAt               DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
 

@@ -14,6 +14,9 @@ type Settings = {
   email: string | null;
   adminEmail: string | null;
   themeColor: string | null;
+  notifyEmailOnBooking: boolean;
+  notifyWhatsAppOnBooking: boolean;
+  whatsappApiKey: string | null;
 };
 
 export default function SettingsForm({ settings }: { settings: Settings | null }) {
@@ -36,6 +39,9 @@ export default function SettingsForm({ settings }: { settings: Settings | null }
         email: (form.get("email") as string) || undefined,
         adminEmail: form.get("adminEmail") as string,
         themeColor: selectedTheme,
+        notifyEmailOnBooking: form.get("notifyEmailOnBooking") === "on",
+        notifyWhatsAppOnBooking: form.get("notifyWhatsAppOnBooking") === "on",
+        whatsappApiKey: (form.get("whatsappApiKey") as string) || undefined,
       });
 
       if ("error" in result) {
@@ -147,6 +153,66 @@ export default function SettingsForm({ settings }: { settings: Settings | null }
               />
               <p className="text-xs text-slate-500 mt-1">
                 Bu e-posta ile kayıtlı kullanıcı yönetim paneline erişebilir.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-slate-100">
+            <h3 className="text-lg font-semibold text-slate-800 border-b pb-2">
+              Rezervasyon Bildirimleri
+            </h3>
+            <p className="text-sm text-slate-500">
+              Bir müşteri online rezervasyon yaptığında size e-posta ve/veya WhatsApp ile bildirim
+              gider. Mesajın sonunda site ve yönetim paneli linki yer alır.
+            </p>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="notifyEmailOnBooking"
+                defaultChecked={settings?.notifyEmailOnBooking ?? true}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span>
+                <span className="block text-sm font-medium text-slate-800">E-posta bildirimi</span>
+                <span className="block text-xs text-slate-500 mt-0.5">
+                  Admin e-postasına gönderilir. Vercel ortam değişkenlerine{" "}
+                  <code className="text-xs bg-slate-100 px-1 rounded">RESEND_API_KEY</code> eklemeniz
+                  gerekir.
+                </span>
+              </span>
+            </label>
+
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name="notifyWhatsAppOnBooking"
+                defaultChecked={settings?.notifyWhatsAppOnBooking ?? false}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span>
+                <span className="block text-sm font-medium text-slate-800">WhatsApp bildirimi</span>
+                <span className="block text-xs text-slate-500 mt-0.5">
+                  Aşağıdaki telefon numarasına gönderilir (CallMeBot ile).
+                </span>
+              </span>
+            </label>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                WhatsApp API Anahtarı (CallMeBot)
+              </label>
+              <input
+                name="whatsappApiKey"
+                type="text"
+                defaultValue={settings?.whatsappApiKey ?? ""}
+                className="w-full border border-slate-300 rounded-md px-4 py-2.5 ring-brand transition-shadow"
+                placeholder="CallMeBot API anahtarınız"
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                WhatsApp&apos;tan <strong>+34 644 44 71 67</strong> numarasına &quot;I allow
+                callmebot to send me messages&quot; yazın. Dönen API anahtarını buraya yapıştırın.
+                Telefon alanına bildirim alacağınız numarayı (05XX…) girin.
               </p>
             </div>
           </div>
