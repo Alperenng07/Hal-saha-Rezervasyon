@@ -181,7 +181,7 @@ export default function PitchesManager({ initialPitches }: { initialPitches: Pit
                   <input
                     name="openTime"
                     type="time"
-                    defaultValue={editingPitch?.openTime || "09:00"}
+                    defaultValue={editingPitch?.openTime || "12:00"}
                     required
                     className="w-full border border-slate-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
@@ -191,7 +191,7 @@ export default function PitchesManager({ initialPitches }: { initialPitches: Pit
                   <input
                     name="closeTime"
                     type="time"
-                    defaultValue={editingPitch?.closeTime || "23:00"}
+                    defaultValue={editingPitch?.closeTime || "04:00"}
                     required
                     className="w-full border border-slate-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
