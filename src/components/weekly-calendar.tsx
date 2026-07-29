@@ -10,6 +10,7 @@ import {
   parse,
   addMinutes,
   isBefore,
+  isAfter,
   startOfDay,
 } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -76,26 +77,36 @@ export default function WeeklyCalendar({
 
     const openTime = normalizeTime(p.openTime);
     const closeTime = normalizeTime(p.closeTime);
-    const slots: { startTime: string; endTime: string }[] = [];
+    const duration = p.slotDurationMinutes || 60;
+    const offset = p.slotOffsetMinutes || 0;
 
-    let current = parse(openTime, "HH:mm", new Date());
-    const end = parse(closeTime, "HH:mm", new Date());
+    if (!openTime || !closeTime || duration <= 0) return [];
+
+    const base = startOfDay(new Date());
+    let current = parse(openTime, "HH:mm", base);
+    let end = parse(closeTime, "HH:mm", base);
 
     if (Number.isNaN(current.getTime()) || Number.isNaN(end.getTime())) {
       return [];
     }
 
-    current = addMinutes(current, p.slotOffsetMinutes);
+    // Kapanış saati açılıştan önceyse (örn. 18:00–00:00) ertesi güne taşınır
+    if (!isBefore(current, end)) {
+      end = addDays(end, 1);
+    }
+
+    current = addMinutes(current, offset);
+
+    const slots: { startTime: string; endTime: string }[] = [];
 
     while (isBefore(current, end)) {
-      const startTime = format(current, "HH:mm");
-      const slotEnd = addMinutes(current, p.slotDurationMinutes);
+      const slotEnd = addMinutes(current, duration);
+      if (isAfter(slotEnd, end)) break;
 
-      if (!isBefore(slotEnd, end)) {
-        break;
-      }
-
-      slots.push({ startTime, endTime: format(slotEnd, "HH:mm") });
+      slots.push({
+        startTime: format(current, "HH:mm"),
+        endTime: format(slotEnd, "HH:mm"),
+      });
       current = slotEnd;
     }
 

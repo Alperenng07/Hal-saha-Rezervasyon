@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getBusinessSettings, getPitches, getBookings } from "@/lib/data";
 import WeeklyCalendar from "@/components/weekly-calendar";
 
@@ -11,7 +12,7 @@ export default async function Home() {
   const businessName = settings?.name ?? "Halı Saha Tesisleri";
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-50 selection:bg-emerald-200">
+    <div className="relative bg-slate-50 selection:bg-emerald-200">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] overflow-hidden -z-10 pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[70%] rounded-full bg-emerald-400/20 blur-[120px]" />
         <div className="absolute top-[10%] -right-[10%] w-[40%] h-[60%] rounded-full bg-teal-400/10 blur-[100px]" />
@@ -49,6 +50,15 @@ export default async function Home() {
             <WeeklyCalendar pitches={pitches} initialBookings={bookings} />
           </div>
         )}
+
+        <div className="mt-16 pt-8 border-t border-slate-200/80 text-center">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-emerald-600 transition-colors"
+          >
+            İşletme Yönetim Paneli →
+          </Link>
+        </div>
       </div>
     </div>
   );
