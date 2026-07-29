@@ -45,6 +45,10 @@ interface SelectedSlot {
   pitchName: string;
 }
 
+function normalizeTime(time: string): string {
+  return time.trim().slice(0, 5);
+}
+
 export default function WeeklyCalendar({
   pitches,
   initialBookings,
@@ -69,21 +73,32 @@ export default function WeeklyCalendar({
 
   const generateSlots = (p: Pitch) => {
     if (!p) return [];
-    const slots = [];
-    let current = parse(p.openTime, "HH:mm", new Date());
-    const end = parse(p.closeTime, "HH:mm", new Date());
+
+    const openTime = normalizeTime(p.openTime);
+    const closeTime = normalizeTime(p.closeTime);
+    const slots: { startTime: string; endTime: string }[] = [];
+
+    let current = parse(openTime, "HH:mm", new Date());
+    const end = parse(closeTime, "HH:mm", new Date());
+
+    if (Number.isNaN(current.getTime()) || Number.isNaN(end.getTime())) {
+      return [];
+    }
+
     current = addMinutes(current, p.slotOffsetMinutes);
 
     while (isBefore(current, end)) {
       const startTime = format(current, "HH:mm");
-      current = addMinutes(current, p.slotDurationMinutes);
-      const endTime = format(current, "HH:mm");
-      if (isBefore(parse(endTime, "HH:mm", new Date()), end) || endTime === format(end, "HH:mm")) {
-        slots.push({ startTime, endTime });
-      } else {
+      const slotEnd = addMinutes(current, p.slotDurationMinutes);
+
+      if (!isBefore(slotEnd, end)) {
         break;
       }
+
+      slots.push({ startTime, endTime: format(slotEnd, "HH:mm") });
+      current = slotEnd;
     }
+
     return slots;
   };
 
@@ -97,7 +112,7 @@ export default function WeeklyCalendar({
       (b) =>
         b.pitchId === selectedPitch &&
         isSameDay(new Date(b.date), date) &&
-        b.startTime === startTime
+        normalizeTime(b.startTime) === startTime
     );
   };
 
@@ -230,7 +245,15 @@ export default function WeeklyCalendar({
             </tr>
           </thead>
           <tbody className="bg-white/40">
-            {slots.map((slot, i) => (
+            {slots.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="py-16 text-center text-slate-500">
+                  Bu saha için tanımlı çalışma saati bulunamadı. Lütfen yönetim panelinden
+                  açılış/kapanış saatlerini kontrol edin.
+                </td>
+              </tr>
+            ) : (
+              slots.map((slot, i) => (
               <tr key={i} className="group hover:bg-slate-50/80 transition-colors">
                 <td className="p-3 border-b border-slate-100 text-center sticky left-0 z-10 bg-white/95 backdrop-blur-md">
                   <div className="inline-block px-3 py-1 rounded-md bg-slate-100/80 text-slate-600 font-semibold text-xs tracking-wide">
@@ -269,7 +292,8 @@ export default function WeeklyCalendar({
                   );
                 })}
               </tr>
-            ))}
+            ))
+            )}
           </tbody>
         </table>
       </div>
