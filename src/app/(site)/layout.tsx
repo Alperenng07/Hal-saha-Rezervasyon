@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/navbar";
 import { getBusinessSettings } from "@/lib/data";
+import { getThemeClass } from "@/lib/themes";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getBusinessSettings();
@@ -13,9 +14,12 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function SiteLayout({ children }: { children: React.ReactNode }) {
+export default async function SiteLayout({ children }: { children: React.ReactNode }) {
+  const settings = await getBusinessSettings();
+  const themeClass = getThemeClass(settings?.themeColor);
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={`min-h-screen flex flex-col site-themed ${themeClass}`}>
       <Navbar />
       <main className="flex-1">{children}</main>
       <footer className="border-t border-slate-200 bg-white py-4 sm:py-6 mt-auto">
@@ -23,7 +27,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
           <p className="text-slate-500">© {new Date().getFullYear()} Halı Saha Rezervasyon</p>
           <Link
             href="/login"
-            className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+            className="font-semibold link-brand"
           >
             İşletme Yönetim Paneli →
           </Link>

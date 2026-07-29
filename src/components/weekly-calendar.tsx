@@ -172,15 +172,13 @@ export default function WeeklyCalendar({
   return (
     <div className="bg-white/80 backdrop-blur-xl rounded-xl sm:rounded-[1.4rem] overflow-hidden relative ring-1 ring-slate-900/5">
       <div className="p-3 sm:p-4 md:p-6 border-b border-slate-100 flex flex-col gap-3 sm:gap-4 md:flex-row md:justify-between md:items-center bg-white/50">
-        <div className="flex gap-1.5 sm:gap-2 w-full md:w-auto p-1 bg-slate-100/80 rounded-lg sm:rounded-xl border border-slate-200/50 overflow-x-auto">
+        <div className="flex gap-1.5 sm:gap-2 w-full md:w-auto p-1 bg-slate-100/80 rounded-lg sm:rounded-xl border border-slate-200/50 overflow-x-auto scroll-touch">
           {pitches.map((p) => (
             <button
               key={p.id}
               onClick={() => setSelectedPitch(p.id)}
-              className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-md sm:rounded-lg font-semibold text-xs sm:text-sm transition-all duration-300 shrink-0 ${
-                selectedPitch === p.id
-                  ? "bg-white text-emerald-700 shadow-sm ring-1 ring-slate-900/5"
-                  : "text-slate-500 hover:text-slate-900 hover:bg-white/50"
+              className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-md sm:rounded-lg font-semibold text-xs sm:text-sm shrink-0 pitch-tab ${
+                selectedPitch === p.id ? "pitch-tab-active" : "text-slate-500 hover:text-slate-900 hover:bg-white/50"
               }`}
             >
               {p.name}
@@ -190,7 +188,7 @@ export default function WeeklyCalendar({
         <div className="flex items-center justify-between w-full md:w-auto gap-2 sm:gap-4 bg-white md:bg-transparent p-2 sm:p-3 md:p-0 rounded-lg sm:rounded-xl border border-slate-200/50 md:border-0 shadow-sm md:shadow-none">
           <button
             onClick={handlePrevWeek}
-            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors active:scale-95 touch-manipulation"
+            className="p-2 text-slate-400 rounded-lg nav-icon-btn"
             aria-label="Önceki hafta"
           >
             ←
@@ -200,13 +198,13 @@ export default function WeeklyCalendar({
               {format(startOfCurrentWeek, "d MMM", { locale: tr })} -{" "}
               {format(addDays(startOfCurrentWeek, 6), "d MMM", { locale: tr })}
             </span>
-            <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 uppercase tracking-wider">
+            <span className="text-[10px] sm:text-xs font-semibold text-brand uppercase tracking-wider">
               {format(startOfCurrentWeek, "yyyy")}
             </span>
           </div>
           <button
             onClick={handleNextWeek}
-            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors active:scale-95 touch-manipulation"
+            className="p-2 text-slate-400 rounded-lg nav-icon-btn"
             aria-label="Sonraki hafta"
           >
             →
@@ -216,7 +214,7 @@ export default function WeeklyCalendar({
 
       {/* Mobil: gün seçici + slot listesi */}
       <div className="md:hidden px-3 pb-4">
-        <div className="flex gap-2 overflow-x-auto py-3 -mx-1 px-1 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto py-3 -mx-1 px-1 scroll-touch">
           {weekDays.map((day) => {
             const isToday = isSameDay(day, new Date());
             const isSelected = isSameDay(day, selectedDay);
@@ -225,12 +223,12 @@ export default function WeeklyCalendar({
                 key={day.toISOString()}
                 type="button"
                 onClick={() => setSelectedDay(day)}
-                className={`shrink-0 flex flex-col items-center min-w-[3.25rem] px-2 py-2 rounded-xl border transition-colors touch-manipulation ${
+                className={`shrink-0 flex flex-col items-center min-w-[3.25rem] px-2 py-2 rounded-xl border day-pill ${
                   isSelected
-                    ? "bg-emerald-600 border-emerald-600 text-white shadow-md"
+                    ? "day-pill-selected"
                     : isToday
-                      ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                      : "bg-white border-slate-200 text-slate-600"
+                      ? "day-pill-today"
+                      : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
                 }`}
               >
                 <span className="text-[10px] font-bold uppercase">
@@ -251,7 +249,7 @@ export default function WeeklyCalendar({
             Bu saha için tanımlı çalışma saati bulunamadı.
           </p>
         ) : (
-          <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-0.5">
+          <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-0.5 scroll-touch">
             {slots.map((slot) => {
               const booked = isSlotBooked(selectedDay, slot.startTime);
               const subscribed = isSlotSubscribed(selectedDay, slot.startTime);
@@ -282,7 +280,7 @@ export default function WeeklyCalendar({
                       onClick={() =>
                         handleReserveClick(selectedDay, slot.startTime, slot.endTime)
                       }
-                      className="flex-1 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg font-bold text-xs touch-manipulation active:scale-[0.98] transition-transform"
+                      className="flex-1 py-2.5 rounded-lg font-bold text-xs slot-available"
                     >
                       SEÇ · {slot.endTime}
                     </button>
@@ -295,7 +293,7 @@ export default function WeeklyCalendar({
       </div>
 
       {/* Masaüstü: haftalık tablo */}
-      <div className="hidden md:block overflow-x-auto pb-6 pt-2 relative">
+      <div className="hidden md:block overflow-x-auto pb-6 pt-2 relative scroll-touch">
         <table className="w-full text-sm text-left border-separate border-spacing-0 min-w-[760px] lg:min-w-[900px]">
           <thead>
             <tr>
@@ -307,16 +305,16 @@ export default function WeeklyCalendar({
                 return (
                   <th
                     key={i}
-                    className={`p-4 border-b border-slate-100 text-center w-[12%] min-w-[110px] ${isToday ? "bg-emerald-50/50" : "bg-transparent"}`}
+                    className={`p-4 border-b border-slate-100 text-center w-[12%] min-w-[110px] ${isToday ? "bg-brand-today" : "bg-transparent"}`}
                   >
                     <div className="flex flex-col items-center gap-1">
                       <span
-                        className={`text-[11px] font-bold uppercase tracking-widest ${isToday ? "text-emerald-600" : "text-slate-400"}`}
+                        className={`text-[11px] font-bold uppercase tracking-widest ${isToday ? "text-brand" : "text-slate-400"}`}
                       >
                         {format(day, "EEEE", { locale: tr })}
                       </span>
                       <span
-                        className={`h-8 w-8 flex items-center justify-center rounded-full text-base font-bold ${isToday ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30" : "text-slate-800"}`}
+                        className={`h-8 w-8 flex items-center justify-center rounded-full text-base font-bold ${isToday ? "bg-brand text-white shadow-brand-sm" : "text-slate-800"}`}
                       >
                         {format(day, "d")}
                       </span>
@@ -350,7 +348,7 @@ export default function WeeklyCalendar({
                   return (
                     <td
                       key={j}
-                      className={`p-2 border-b border-slate-100 relative h-[64px] ${isToday ? "bg-emerald-50/30" : ""}`}
+                      className={`p-2 border-b border-slate-100 relative h-[64px] ${isToday ? "bg-brand-today-cell" : ""}`}
                     >
                       {booked ? (
                         <div className="absolute inset-1.5 bg-rose-50 border border-rose-100 text-rose-600 rounded-lg flex items-center justify-center font-bold text-xs shadow-sm">
@@ -370,7 +368,7 @@ export default function WeeklyCalendar({
                           onClick={() =>
                             handleReserveClick(day, slot.startTime, slot.endTime)
                           }
-                          className="absolute inset-1.5 z-10 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg flex items-center justify-center font-bold text-xs cursor-pointer touch-manipulation hover:bg-gradient-to-r hover:from-emerald-500 hover:to-teal-500 hover:text-white hover:border-transparent hover:shadow-md active:scale-95 transition-all duration-200"
+                          className="absolute inset-1.5 z-10 rounded-lg flex items-center justify-center font-bold text-xs slot-available"
                         >
                           SEÇ
                         </button>
@@ -404,7 +402,7 @@ export default function WeeklyCalendar({
                   {format(selectedSlot.date, "d MMM yyyy", { locale: tr })}
                 </span>
                 <span className="text-slate-500">Saat</span>
-                <span className="font-semibold text-emerald-700 text-right">
+                <span className="font-semibold text-brand-strong text-right">
                   {selectedSlot.startTime} – {selectedSlot.endTime}
                 </span>
               </div>
@@ -419,7 +417,7 @@ export default function WeeklyCalendar({
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm ring-brand"
                     placeholder="Adınız Soyadınız"
                   />
                 </div>
@@ -432,7 +430,7 @@ export default function WeeklyCalendar({
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
                     required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm ring-brand"
                     placeholder="05XX XXX XX XX"
                   />
                 </div>
@@ -444,7 +442,7 @@ export default function WeeklyCalendar({
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={2}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm resize-none ring-brand"
                     placeholder="Notunuz..."
                   />
                 </div>
@@ -461,14 +459,14 @@ export default function WeeklyCalendar({
               <button
                 onClick={() => setIsModalOpen(false)}
                 disabled={isPending}
-                className="flex-1 px-3 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors"
+                className="flex-1 px-3 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-all active:scale-[0.97] cursor-pointer"
               >
                 İptal
               </button>
               <button
                 onClick={confirmBooking}
                 disabled={isPending}
-                className="flex-1 px-3 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                className="flex-1 px-3 py-2.5 btn-brand rounded-lg text-sm font-semibold disabled:opacity-60"
               >
                 {isPending ? "Kaydediliyor..." : "Onayla"}
               </button>

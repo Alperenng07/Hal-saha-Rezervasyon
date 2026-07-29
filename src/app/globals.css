@@ -51,6 +51,15 @@
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+  --brand-50: #ecfdf5;
+  --brand-100: #d1fae5;
+  --brand-200: #a7f3d0;
+  --brand-400: #34d399;
+  --brand-500: #10b981;
+  --brand-600: #059669;
+  --brand-700: #047857;
+  --brand-secondary: #14b8a6;
+  --brand-glow: rgb(16 185 129 / 0.2);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -127,4 +136,213 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ── Site theme palettes (6 base colors) ── */
+.theme-emerald {
+  --brand-50: #ecfdf5;
+  --brand-100: #d1fae5;
+  --brand-200: #a7f3d0;
+  --brand-400: #34d399;
+  --brand-500: #10b981;
+  --brand-600: #059669;
+  --brand-700: #047857;
+  --brand-secondary: #14b8a6;
+  --brand-glow: rgb(16 185 129 / 0.2);
+}
+
+.theme-blue {
+  --brand-50: #eff6ff;
+  --brand-100: #dbeafe;
+  --brand-200: #bfdbfe;
+  --brand-400: #60a5fa;
+  --brand-500: #3b82f6;
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --brand-secondary: #0ea5e9;
+  --brand-glow: rgb(37 99 235 / 0.2);
+}
+
+.theme-violet {
+  --brand-50: #f5f3ff;
+  --brand-100: #ede9fe;
+  --brand-200: #ddd6fe;
+  --brand-400: #a78bfa;
+  --brand-500: #8b5cf6;
+  --brand-600: #7c3aed;
+  --brand-700: #6d28d9;
+  --brand-secondary: #a855f7;
+  --brand-glow: rgb(124 58 237 / 0.2);
+}
+
+.theme-orange {
+  --brand-50: #fff7ed;
+  --brand-100: #ffedd5;
+  --brand-200: #fed7aa;
+  --brand-400: #fb923c;
+  --brand-500: #f97316;
+  --brand-600: #ea580c;
+  --brand-700: #c2410c;
+  --brand-secondary: #f97316;
+  --brand-glow: rgb(234 88 12 / 0.2);
+}
+
+.theme-rose {
+  --brand-50: #fff1f2;
+  --brand-100: #ffe4e6;
+  --brand-200: #fecdd3;
+  --brand-400: #fb7185;
+  --brand-500: #f43f5e;
+  --brand-600: #e11d48;
+  --brand-700: #be123c;
+  --brand-secondary: #f43f5e;
+  --brand-glow: rgb(225 29 72 / 0.2);
+}
+
+.theme-cyan {
+  --brand-50: #ecfeff;
+  --brand-100: #cffafe;
+  --brand-200: #a5f3fc;
+  --brand-400: #22d3ee;
+  --brand-500: #06b6d4;
+  --brand-600: #0891b2;
+  --brand-700: #0e7490;
+  --brand-secondary: #06b6d4;
+  --brand-glow: rgb(8 145 178 / 0.2);
+}
+
+@layer utilities {
+  .site-themed ::selection {
+    background-color: var(--brand-200);
+  }
+
+  .bg-brand-soft { background-color: var(--brand-50); }
+  .bg-brand-muted { background-color: var(--brand-100); }
+  .bg-brand-light { background-color: var(--brand-200); }
+  .bg-brand { background-color: var(--brand-600); }
+  .bg-brand-ping { background-color: var(--brand-400); }
+  .bg-brand-dot { background-color: var(--brand-500); }
+  .bg-brand-today { background-color: color-mix(in srgb, var(--brand-50) 55%, transparent); }
+  .bg-brand-today-cell { background-color: color-mix(in srgb, var(--brand-50) 35%, transparent); }
+  .bg-brand-glow { background-color: var(--brand-glow); }
+  .bg-brand-glow-secondary { background-color: color-mix(in srgb, var(--brand-secondary) 12%, transparent); }
+
+  .text-brand { color: var(--brand-600); }
+  .text-brand-strong { color: var(--brand-700); }
+
+  .border-brand { border-color: var(--brand-200); }
+  .border-brand-strong { border-color: var(--brand-600); }
+
+  .from-brand { --tw-gradient-from: var(--brand-600); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+  .to-brand-accent { --tw-gradient-to: var(--brand-secondary); }
+  .from-brand-mid { --tw-gradient-from: var(--brand-500); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
+
+  .shadow-brand { box-shadow: 0 4px 14px color-mix(in srgb, var(--brand-600) 25%, transparent); }
+  .shadow-brand-sm { box-shadow: 0 2px 8px color-mix(in srgb, var(--brand-600) 20%, transparent); }
+
+  .ring-brand:focus,
+  .ring-brand:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-500) 35%, transparent);
+    border-color: var(--brand-500);
+  }
+
+  .hover\:bg-brand-soft:hover { background-color: var(--brand-50); }
+  .hover\:bg-brand:hover { background-color: var(--brand-600); }
+  .hover\:bg-brand-dark:hover { background-color: var(--brand-700); }
+  .hover\:text-brand:hover { color: var(--brand-600); }
+  .hover\:text-brand-strong:hover { color: var(--brand-700); }
+
+  .bg-brand-gradient {
+    background-image: linear-gradient(to right, var(--brand-600), var(--brand-secondary));
+  }
+  .bg-brand-gradient-br {
+    background-image: linear-gradient(to bottom right, var(--brand-500), var(--brand-secondary));
+  }
+
+  .slot-available {
+    background-color: var(--brand-50);
+    border: 1px solid var(--brand-200);
+    color: var(--brand-700);
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .slot-available:hover {
+    background-image: linear-gradient(to right, var(--brand-500), var(--brand-secondary));
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--brand-600) 30%, transparent);
+    transform: translateY(-1px);
+  }
+  .slot-available:active {
+    transform: scale(0.96);
+  }
+
+  .btn-brand {
+    background-color: var(--brand-600);
+    color: white;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  }
+  .btn-brand:hover { background-color: var(--brand-700); box-shadow: 0 4px 12px color-mix(in srgb, var(--brand-600) 35%, transparent); }
+  .btn-brand:active { transform: scale(0.97); }
+
+  .nav-icon-btn {
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+  }
+  .nav-icon-btn:hover { color: var(--brand-600); background-color: var(--brand-50); }
+  .nav-icon-btn:active { transform: scale(0.92); }
+
+  .day-pill {
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+  .day-pill:active { transform: scale(0.94); }
+  .day-pill-selected {
+    background-color: var(--brand-600);
+    border-color: var(--brand-600);
+    color: white;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--brand-600) 35%, transparent);
+  }
+  .day-pill-today {
+    background-color: var(--brand-50);
+    border-color: var(--brand-200);
+    color: var(--brand-700);
+  }
+
+  .scroll-touch {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--brand-200) transparent;
+  }
+  .scroll-touch::-webkit-scrollbar { height: 6px; }
+  .scroll-touch::-webkit-scrollbar-thumb {
+    background: var(--brand-200);
+    border-radius: 999px;
+  }
+  .scroll-touch::-webkit-scrollbar-thumb:hover { background: var(--brand-400); }
+
+  .pitch-tab {
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  }
+  .pitch-tab:active { transform: scale(0.97); }
+  .pitch-tab-active {
+    background-color: white;
+    color: var(--brand-700);
+    box-shadow: 0 1px 3px rgb(15 23 42 / 0.08);
+  }
+
+  .link-brand {
+    color: var(--brand-600);
+    transition: color 0.2s ease;
+  }
+  .link-brand:hover { color: var(--brand-700); }
 }

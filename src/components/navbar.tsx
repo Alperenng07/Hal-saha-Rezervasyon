@@ -6,9 +6,12 @@ export default async function Navbar() {
   const businessName = settings?.name ?? "Halı Saha";
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-200/50 bg-white/70 backdrop-blur-md shadow-sm">
+    <nav className="sticky top-0 z-50 border-b border-slate-200/50 bg-white/80 backdrop-blur-md shadow-sm">
       <div className="container mx-auto px-3 sm:px-4 lg:px-8 h-14 sm:h-16 md:h-20 flex items-center">
-        <Link href="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
+        <Link
+          href="/"
+          className="flex items-center gap-2 sm:gap-3 group min-w-0 transition-opacity hover:opacity-90 active:scale-[0.99]"
+        >
           {settings?.logoUrl ? (
             <img
               src={settings.logoUrl}
@@ -16,7 +19,7 @@ export default async function Navbar() {
               className="h-8 w-8 sm:h-10 sm:w-10 object-contain group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className="h-8 w-8 sm:h-10 sm:w-10 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-black text-base sm:text-lg shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform duration-300 shrink-0">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 bg-brand-gradient-br rounded-lg sm:rounded-xl flex items-center justify-center text-white font-black text-base sm:text-lg shadow-brand-sm group-hover:scale-105 group-hover:shadow-brand transition-all duration-300 shrink-0">
               {businessName.charAt(0)}
             </div>
           )}

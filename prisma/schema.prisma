@@ -38,6 +38,7 @@ model BusinessSettings {
   phone      String?
   email      String?
   adminEmail String?
+  themeColor String   @default("emerald")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
