@@ -41,13 +41,11 @@ export default async function Home() {
 
         {pitches.length === 0 ? (
           <div className="max-w-xl mx-auto text-center bg-white rounded-2xl border border-slate-200 p-10 shadow-sm">
-            <p className="text-slate-600 font-medium">
-              Henüz aktif saha tanımlanmamış.
-            </p>
+            <p className="text-slate-600 font-medium">Henüz aktif saha tanımlanmamış.</p>
           </div>
         ) : (
           <div className="relative max-w-6xl mx-auto rounded-3xl p-1 bg-gradient-to-b from-slate-200/50 to-transparent shadow-2xl shadow-slate-200/50">
-            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl blur opacity-20" />
+            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl blur opacity-20 pointer-events-none" />
             <WeeklyCalendar pitches={pitches} initialBookings={bookings} />
           </div>
         )}

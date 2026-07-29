@@ -10,11 +10,17 @@ import {
   LogOut,
   Menu,
   X,
+  User,
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { syncUserAction } from "@/lib/actions/auth";
 
-export default function Sidebar() {
+type SidebarProps = {
+  adminName: string | null;
+  adminEmail: string;
+};
+
+export default function Sidebar({ adminName, adminEmail }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -58,6 +64,20 @@ export default function Sidebar() {
         <div className="p-6 border-b border-slate-800">
           <h2 className="text-xl font-bold tracking-tight">Yönetim Paneli</h2>
           <p className="text-sm text-slate-400 mt-1">Saha & Rezervasyon</p>
+        </div>
+
+        <div className="px-4 py-4 border-b border-slate-800">
+          <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-slate-800/60">
+            <div className="h-9 w-9 rounded-full bg-emerald-600 flex items-center justify-center shrink-0">
+              <User size={18} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-white truncate">
+                {adminName || "Yönetici"}
+              </p>
+              <p className="text-xs text-slate-400 truncate">{adminEmail}</p>
+            </div>
+          </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">

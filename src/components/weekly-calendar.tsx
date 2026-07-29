@@ -256,10 +256,11 @@ export default function WeeklyCalendar({
                         </div>
                       ) : (
                         <button
+                          type="button"
                           onClick={() =>
                             handleReserveClick(day, slot.startTime, slot.endTime)
                           }
-                          className="absolute inset-1.5 bg-emerald-50/50 border border-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center font-bold text-xs opacity-0 group-hover:opacity-100 hover:opacity-100 hover:bg-gradient-to-r hover:from-emerald-500 hover:to-teal-500 hover:text-white hover:border-transparent hover:shadow-md transition-all duration-300 scale-95 hover:scale-100"
+                          className="absolute inset-1.5 z-10 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg flex items-center justify-center font-bold text-xs cursor-pointer touch-manipulation hover:bg-gradient-to-r hover:from-emerald-500 hover:to-teal-500 hover:text-white hover:border-transparent hover:shadow-md active:scale-95 transition-all duration-200"
                         >
                           SEÇ
                         </button>

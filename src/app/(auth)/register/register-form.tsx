@@ -60,7 +60,7 @@ export default function RegisterForm() {
             İşletme Hesabı Oluştur
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Yönetim paneli için işletme sahibi hesabı oluşturun. Müşteriler kayıt olmadan rezervasyon yapabilir.
+            Yönetim paneli için işletme sahibi hesabı oluşturun.
           </p>
         </div>
 
