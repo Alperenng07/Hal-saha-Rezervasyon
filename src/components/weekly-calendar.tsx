@@ -310,40 +310,32 @@ export default function WeeklyCalendar({
       </div>
 
       {isModalOpen && selectedSlot && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-md px-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden ring-1 ring-slate-900/5">
-            <div className="p-6 border-b border-slate-100 bg-gradient-to-b from-slate-50 to-white">
-              <h3 className="text-2xl font-extrabold text-slate-800 tracking-tight">
-                Rezervasyon Onayı
-              </h3>
-              <p className="text-sm text-slate-500 mt-1 font-medium">
-                Rezervasyon bilgilerinizi girin ve onaylayın.
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-3 sm:p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm max-h-[min(560px,calc(100dvh-1.5rem))] flex flex-col overflow-hidden ring-1 ring-slate-900/5">
+            <div className="px-4 py-3 border-b border-slate-100 shrink-0">
+              <h3 className="text-lg font-bold text-slate-800">Rezervasyon Onayı</h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Bilgilerinizi girip onaylayın.
               </p>
             </div>
 
-            <div className="p-6 space-y-5 bg-white">
-              <div className="bg-slate-50 rounded-2xl p-4 space-y-3 border border-slate-100">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-sm font-medium">Saha</span>
-                  <span className="text-slate-900 font-bold">{selectedSlot.pitchName}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-sm font-medium">Tarih</span>
-                  <span className="text-slate-900 font-bold">
-                    {format(selectedSlot.date, "d MMMM yyyy", { locale: tr })}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-sm font-medium">Saat</span>
-                  <div className="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md font-bold text-sm">
-                    {selectedSlot.startTime} - {selectedSlot.endTime}
-                  </div>
-                </div>
+            <div className="px-4 py-3 space-y-3 overflow-y-auto flex-1 min-h-0">
+              <div className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
+                <span className="text-slate-500">Saha</span>
+                <span className="font-semibold text-slate-900 text-right">{selectedSlot.pitchName}</span>
+                <span className="text-slate-500">Tarih</span>
+                <span className="font-semibold text-slate-900 text-right">
+                  {format(selectedSlot.date, "d MMM yyyy", { locale: tr })}
+                </span>
+                <span className="text-slate-500">Saat</span>
+                <span className="font-semibold text-emerald-700 text-right">
+                  {selectedSlot.startTime} – {selectedSlot.endTime}
+                </span>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-2.5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
+                  <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wide mb-1">
                     Ad Soyad
                   </label>
                   <input
@@ -351,56 +343,56 @@ export default function WeeklyCalendar({
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
                     placeholder="Adınız Soyadınız"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
-                    Telefon Numarası
+                  <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wide mb-1">
+                    Telefon
                   </label>
                   <input
                     type="tel"
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
                     required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
                     placeholder="05XX XXX XX XX"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 uppercase tracking-wide mb-1">
+                    Not <span className="normal-case font-normal text-slate-400">(opsiyonel)</span>
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={2}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500"
+                    placeholder="Notunuz..."
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
-                  Not (opsiyonel)
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm min-h-[80px]"
-                  placeholder="Eklemek istediğiniz bir not..."
-                />
-              </div>
-
               {error && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
                   {error}
                 </div>
               )}
             </div>
 
-            <div className="p-6 pt-2 pb-8 flex gap-3 bg-white">
+            <div className="px-4 py-3 border-t border-slate-100 flex gap-2 shrink-0 bg-white">
               <button
                 onClick={() => setIsModalOpen(false)}
                 disabled={isPending}
-                className="flex-1 px-4 py-3.5 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-all"
+                className="flex-1 px-3 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors"
               >
                 İptal
               </button>
               <button
                 onClick={confirmBooking}
                 disabled={isPending}
-                className="flex-1 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-500 text-white rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-60"
+                className="flex-1 px-3 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-60"
               >
                 {isPending ? "Kaydediliyor..." : "Onayla"}
               </button>
