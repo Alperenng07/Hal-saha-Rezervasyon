@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   format,
@@ -58,6 +58,7 @@ export default function WeeklyCalendar({
   const [isPending, startTransition] = useTransition();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedPitch, setSelectedPitch] = useState(pitches[0]?.id || "");
+  const [selectedDay, setSelectedDay] = useState(() => new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
   const [guestName, setGuestName] = useState("");
@@ -69,6 +70,14 @@ export default function WeeklyCalendar({
   const weekDays = Array.from({ length: 7 }).map((_, i) =>
     addDays(startOfCurrentWeek, i)
   );
+
+  useEffect(() => {
+    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const days = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
+    const today = startOfDay(new Date());
+    const defaultDay = days.find((day) => !isBefore(day, today)) ?? days[0];
+    setSelectedDay(defaultDay);
+  }, [currentDate]);
 
   const pitch = pitches.find((p) => p.id === selectedPitch);
 
@@ -182,14 +191,14 @@ export default function WeeklyCalendar({
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-[1.4rem] overflow-hidden relative ring-1 ring-slate-900/5">
-      <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 bg-white/50">
-        <div className="flex flex-wrap gap-2 w-full md:w-auto p-1 bg-slate-100/80 rounded-xl border border-slate-200/50">
+    <div className="bg-white/80 backdrop-blur-xl rounded-xl sm:rounded-[1.4rem] overflow-hidden relative ring-1 ring-slate-900/5">
+      <div className="p-3 sm:p-4 md:p-6 border-b border-slate-100 flex flex-col gap-3 sm:gap-4 md:flex-row md:justify-between md:items-center bg-white/50">
+        <div className="flex gap-1.5 sm:gap-2 w-full md:w-auto p-1 bg-slate-100/80 rounded-lg sm:rounded-xl border border-slate-200/50 overflow-x-auto">
           {pitches.map((p) => (
             <button
               key={p.id}
               onClick={() => setSelectedPitch(p.id)}
-              className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-300 flex-1 md:flex-none whitespace-nowrap ${
+              className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-md sm:rounded-lg font-semibold text-xs sm:text-sm transition-all duration-300 shrink-0 ${
                 selectedPitch === p.id
                   ? "bg-white text-emerald-700 shadow-sm ring-1 ring-slate-900/5"
                   : "text-slate-500 hover:text-slate-900 hover:bg-white/50"
@@ -199,33 +208,111 @@ export default function WeeklyCalendar({
             </button>
           ))}
         </div>
-        <div className="flex items-center justify-between w-full md:w-auto gap-4 bg-white md:bg-transparent p-3 md:p-0 rounded-xl border border-slate-200/50 md:border-0 shadow-sm md:shadow-none">
+        <div className="flex items-center justify-between w-full md:w-auto gap-2 sm:gap-4 bg-white md:bg-transparent p-2 sm:p-3 md:p-0 rounded-lg sm:rounded-xl border border-slate-200/50 md:border-0 shadow-sm md:shadow-none">
           <button
             onClick={handlePrevWeek}
-            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors active:scale-95"
+            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors active:scale-95 touch-manipulation"
+            aria-label="Önceki hafta"
           >
             ←
           </button>
-          <div className="flex flex-col items-center">
-            <span className="font-bold text-slate-900 min-w-[140px] sm:min-w-[160px] text-center text-[15px] sm:text-base tracking-tight">
+          <div className="flex flex-col items-center min-w-0">
+            <span className="font-bold text-slate-900 text-center text-sm sm:text-[15px] md:text-base tracking-tight">
               {format(startOfCurrentWeek, "d MMM", { locale: tr })} -{" "}
               {format(addDays(startOfCurrentWeek, 6), "d MMM", { locale: tr })}
             </span>
-            <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">
+            <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 uppercase tracking-wider">
               {format(startOfCurrentWeek, "yyyy")}
             </span>
           </div>
           <button
             onClick={handleNextWeek}
-            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors active:scale-95"
+            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors active:scale-95 touch-manipulation"
+            aria-label="Sonraki hafta"
           >
             →
           </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto pb-6 pt-2 relative">
-        <table className="w-full text-sm text-left border-separate border-spacing-0 min-w-[900px]">
+      {/* Mobil: gün seçici + slot listesi */}
+      <div className="md:hidden px-3 pb-4">
+        <div className="flex gap-2 overflow-x-auto py-3 -mx-1 px-1 scrollbar-hide">
+          {weekDays.map((day) => {
+            const isToday = isSameDay(day, new Date());
+            const isSelected = isSameDay(day, selectedDay);
+            return (
+              <button
+                key={day.toISOString()}
+                type="button"
+                onClick={() => setSelectedDay(day)}
+                className={`shrink-0 flex flex-col items-center min-w-[3.25rem] px-2 py-2 rounded-xl border transition-colors touch-manipulation ${
+                  isSelected
+                    ? "bg-emerald-600 border-emerald-600 text-white shadow-md"
+                    : isToday
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                      : "bg-white border-slate-200 text-slate-600"
+                }`}
+              >
+                <span className="text-[10px] font-bold uppercase">
+                  {format(day, "EEE", { locale: tr })}
+                </span>
+                <span className="text-base font-bold leading-tight">{format(day, "d")}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="text-xs text-slate-500 mb-2 px-0.5">
+          {format(selectedDay, "d MMMM yyyy, EEEE", { locale: tr })}
+        </p>
+
+        {slots.length === 0 ? (
+          <p className="py-8 text-center text-sm text-slate-500">
+            Bu saha için tanımlı çalışma saati bulunamadı.
+          </p>
+        ) : (
+          <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-0.5">
+            {slots.map((slot) => {
+              const booked = isSlotBooked(selectedDay, slot.startTime);
+              const isPast = isSlotPast(selectedDay, slot.startTime);
+              return (
+                <div
+                  key={slot.startTime}
+                  className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2.5 shadow-sm"
+                >
+                  <div className="shrink-0 w-[4.5rem] text-center text-xs font-bold text-slate-600 bg-slate-50 rounded-lg py-2">
+                    {slot.startTime}
+                  </div>
+                  {booked ? (
+                    <div className="flex-1 py-2.5 bg-rose-50 border border-rose-100 text-rose-600 rounded-lg text-center font-bold text-xs">
+                      DOLU
+                    </div>
+                  ) : isPast ? (
+                    <div className="flex-1 py-2.5 bg-slate-50 text-slate-400 rounded-lg text-center font-medium text-xs border border-dashed border-slate-200">
+                      Geçti
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleReserveClick(selectedDay, slot.startTime, slot.endTime)
+                      }
+                      className="flex-1 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg font-bold text-xs touch-manipulation active:scale-[0.98] transition-transform"
+                    >
+                      SEÇ · {slot.endTime}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Masaüstü: haftalık tablo */}
+      <div className="hidden md:block overflow-x-auto pb-6 pt-2 relative">
+        <table className="w-full text-sm text-left border-separate border-spacing-0 min-w-[760px] lg:min-w-[900px]">
           <thead>
             <tr>
               <th className="p-4 border-b border-slate-100 bg-white/95 backdrop-blur-md min-w-[100px] text-center text-slate-400 font-bold uppercase tracking-wider text-xs sticky left-0 z-20">

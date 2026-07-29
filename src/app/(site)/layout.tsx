@@ -18,8 +18,8 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1">{children}</main>
-      <footer className="border-t border-slate-200 bg-white py-6 mt-auto">
-        <div className="container mx-auto px-4 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+      <footer className="border-t border-slate-200 bg-white py-4 sm:py-6 mt-auto">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-8 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-2 sm:gap-3 text-xs sm:text-sm text-center sm:text-left">
           <p className="text-slate-500">© {new Date().getFullYear()} Halı Saha Rezervasyon</p>
           <Link
             href="/login"
