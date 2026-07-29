@@ -9,8 +9,10 @@ const inter = Inter({ subsets: ["latin"] });
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getBusinessSettings();
   return {
-    title: settings.siteTitle,
-    description: `${settings.name} rezervasyon ve yönetim sistemi.`,
+    title: settings?.siteTitle ?? "Halı Saha Rezervasyon",
+    description: settings
+      ? `${settings.name} rezervasyon ve yönetim sistemi.`
+      : "Online halı saha rezervasyon sistemi.",
   };
 }
 
@@ -23,9 +25,7 @@ export default function RootLayout({
     <html lang="tr">
       <body className={`${inter.className} bg-slate-50 min-h-screen flex flex-col`}>
         <Navbar />
-        <main className="flex-1">
-          {children}
-        </main>
+        <main className="flex-1">{children}</main>
       </body>
     </html>
   );

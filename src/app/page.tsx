@@ -1,14 +1,20 @@
 import { getBusinessSettings, getPitches, getBookings } from "@/lib/data";
+import { getCurrentUser, getSessionUser } from "@/lib/auth";
 import WeeklyCalendar from "@/components/weekly-calendar";
 
 export default async function Home() {
-  const settings = await getBusinessSettings();
-  const pitches = await getPitches();
-  const bookings = await getBookings();
+  const [settings, pitches, bookings, user, sessionUser] = await Promise.all([
+    getBusinessSettings(),
+    getPitches(),
+    getBookings(),
+    getCurrentUser(),
+    getSessionUser(),
+  ]);
+
+  const businessName = settings?.name ?? "Halı Saha Tesisleri";
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-slate-50 selection:bg-emerald-200">
-      {/* Background Decorative Blobs */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] overflow-hidden -z-10 pointer-events-none">
         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[70%] rounded-full bg-emerald-400/20 blur-[120px]" />
         <div className="absolute top-[10%] -right-[10%] w-[40%] h-[60%] rounded-full bg-teal-400/10 blur-[100px]" />
@@ -30,14 +36,34 @@ export default async function Home() {
             </span>
           </h1>
           <p className="text-xl text-slate-500/90 leading-relaxed max-w-2xl mx-auto">
-            <strong className="text-slate-700 font-semibold">{settings.name}</strong> sahaları için uygun saatleri aşağıdan gerçek zamanlı inceleyin ve saniyeler içinde rezervasyonunuzu tamamlayın.
+            <strong className="text-slate-700 font-semibold">{businessName}</strong>{" "}
+            sahaları için uygun saatleri aşağıdan gerçek zamanlı inceleyin ve
+            saniyeler içinde rezervasyonunuzu tamamlayın.
           </p>
+          {!sessionUser && (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 inline-block">
+              Rezervasyon yapmak için giriş yapmanız gerekiyor.
+            </p>
+          )}
         </div>
 
-        <div className="relative max-w-6xl mx-auto rounded-3xl p-1 bg-gradient-to-b from-slate-200/50 to-transparent shadow-2xl shadow-slate-200/50">
-          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl blur opacity-20" />
-          <WeeklyCalendar pitches={pitches} initialBookings={bookings} />
-        </div>
+        {pitches.length === 0 ? (
+          <div className="max-w-xl mx-auto text-center bg-white rounded-2xl border border-slate-200 p-10 shadow-sm">
+            <p className="text-slate-600 font-medium">
+              Henüz aktif saha tanımlanmamış. Yönetici panelinden saha ekleyin.
+            </p>
+          </div>
+        ) : (
+          <div className="relative max-w-6xl mx-auto rounded-3xl p-1 bg-gradient-to-b from-slate-200/50 to-transparent shadow-2xl shadow-slate-200/50">
+            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl blur opacity-20" />
+            <WeeklyCalendar
+              pitches={pitches}
+              initialBookings={bookings}
+              isLoggedIn={!!sessionUser}
+              userName={user?.name ?? undefined}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

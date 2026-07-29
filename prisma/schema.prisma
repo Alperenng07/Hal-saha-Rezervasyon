@@ -31,12 +31,15 @@ model User {
 }
 
 model BusinessSettings {
-  id        String   @id @default(uuid())
-  name      String
-  logoUrl   String?
-  siteTitle String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  name       String
+  logoUrl    String?
+  siteTitle  String
+  phone      String?
+  email      String?
+  adminEmail String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Pitch {
@@ -68,6 +71,8 @@ model Booking {
   notes     String?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+
+  @@unique([pitchId, date, startTime])
 }
 
 model Subscription {
