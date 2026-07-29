@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { syncUserAction } from "@/lib/actions/auth";
@@ -33,9 +33,16 @@ export default function LoginForm() {
 
       await syncUserAction();
 
-      const params = new URLSearchParams(window.location.search);
-      const redirect = params.get("redirect") || "/";
-      router.push(redirect);
+      const res = await fetch("/api/auth/check-admin");
+      const { isAdmin } = await res.json();
+
+      if (!isAdmin) {
+        await supabase.auth.signOut();
+        setError("Bu hesap işletme yöneticisi değil. Lütfen admin e-postanızla giriş yapın.");
+        return;
+      }
+
+      router.push("/admin");
       router.refresh();
     } catch {
       setError("Giriş yapılamadı. Supabase ayarlarını kontrol edin.");
@@ -49,10 +56,10 @@ export default function LoginForm() {
       <div className="rounded-3xl border border-slate-200/80 bg-white p-8 shadow-xl shadow-slate-200/50">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
-            Giriş Yap
+            İşletme Girişi
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Rezervasyon yapmak için hesabınıza giriş yapın.
+            Yönetim paneline erişmek için işletme sahibi hesabınızla giriş yapın.
           </p>
         </div>
 
@@ -100,14 +107,19 @@ export default function LoginForm() {
             disabled={loading}
             className="h-11 w-full rounded-xl bg-slate-900 text-sm font-bold text-white hover:bg-slate-800"
           >
-            {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+            {loading ? "Giriş yapılıyor..." : "Yönetim Paneline Gir"}
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-500">
-          Hesabınız yok mu?{" "}
+          İlk kez mi kuruyorsunuz?{" "}
           <Link href="/register" className="font-semibold text-emerald-600 hover:text-emerald-700">
-            Kayıt olun
+            İşletme hesabı oluştur
+          </Link>
+        </p>
+        <p className="mt-3 text-center">
+          <Link href="/" className="text-sm text-slate-400 hover:text-slate-600">
+            ← Rezervasyon sayfasına dön
           </Link>
         </p>
       </div>

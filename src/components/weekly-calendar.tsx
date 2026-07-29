@@ -36,8 +36,6 @@ type Booking = {
 interface WeeklyCalendarProps {
   pitches: Pitch[];
   initialBookings: Booking[];
-  isLoggedIn: boolean;
-  userName?: string;
 }
 
 interface SelectedSlot {
@@ -50,8 +48,6 @@ interface SelectedSlot {
 export default function WeeklyCalendar({
   pitches,
   initialBookings,
-  isLoggedIn,
-  userName,
 }: WeeklyCalendarProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -59,6 +55,8 @@ export default function WeeklyCalendar({
   const [selectedPitch, setSelectedPitch] = useState(pitches[0]?.id || "");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -114,12 +112,9 @@ export default function WeeklyCalendar({
   };
 
   const handleReserveClick = (day: Date, startTime: string, endTime: string) => {
-    if (!isLoggedIn) {
-      router.push("/login?redirect=/");
-      return;
-    }
-
     setError(null);
+    setGuestName("");
+    setGuestPhone("");
     setNotes("");
     setSelectedSlot({
       date: day,
@@ -132,6 +127,10 @@ export default function WeeklyCalendar({
 
   const confirmBooking = () => {
     if (!selectedSlot || !selectedPitch) return;
+    if (!guestName.trim() || !guestPhone.trim()) {
+      setError("Ad soyad ve telefon numarası zorunludur.");
+      return;
+    }
 
     setError(null);
     startTransition(async () => {
@@ -140,6 +139,8 @@ export default function WeeklyCalendar({
         date: format(selectedSlot.date, "yyyy-MM-dd"),
         startTime: selectedSlot.startTime,
         endTime: selectedSlot.endTime,
+        guestName: guestName.trim(),
+        guestPhone: guestPhone.trim(),
         notes: notes || undefined,
       });
 
@@ -280,7 +281,7 @@ export default function WeeklyCalendar({
                 Rezervasyon Onayı
               </h3>
               <p className="text-sm text-slate-500 mt-1 font-medium">
-                {userName ? `Merhaba ${userName},` : "Lütfen"} rezervasyon bilgilerinizi onaylayın.
+                Rezervasyon bilgilerinizi girin ve onaylayın.
               </p>
             </div>
 
@@ -301,6 +302,35 @@ export default function WeeklyCalendar({
                   <div className="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md font-bold text-sm">
                     {selectedSlot.startTime} - {selectedSlot.endTime}
                   </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
+                    Ad Soyad
+                  </label>
+                  <input
+                    type="text"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
+                    placeholder="Adınız Soyadınız"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
+                    Telefon Numarası
+                  </label>
+                  <input
+                    type="tel"
+                    value={guestPhone}
+                    onChange={(e) => setGuestPhone(e.target.value)}
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-sm"
+                    placeholder="05XX XXX XX XX"
+                  />
                 </div>
               </div>
 

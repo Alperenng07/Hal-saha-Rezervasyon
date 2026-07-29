@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "guestName" TEXT;
+ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "guestPhone" TEXT;

@@ -63,6 +63,8 @@ model Booking {
   pitch     Pitch         @relation(fields: [pitchId], references: [id])
   userId    String?
   user      User?         @relation(fields: [userId], references: [id])
+  guestName  String?
+  guestPhone String?
   date      DateTime      @db.Date
   startTime String
   endTime   String

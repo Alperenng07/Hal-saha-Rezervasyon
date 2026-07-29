@@ -75,7 +75,13 @@ export default async function AdminDashboard() {
                       {booking.pitch.name}
                     </td>
                     <td className="py-3 px-4 text-slate-600">
-                      {booking.user?.name || booking.user?.email || "Misafir"}
+                      {booking.guestName ||
+                        booking.user?.name ||
+                        booking.user?.email ||
+                        "Misafir"}
+                      {booking.guestPhone && (
+                        <span className="block text-xs text-slate-400">{booking.guestPhone}</span>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-slate-600">
                       {booking.date.toLocaleDateString("tr-TR")}

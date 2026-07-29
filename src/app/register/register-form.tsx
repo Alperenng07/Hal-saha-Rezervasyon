@@ -38,8 +38,7 @@ export default function RegisterForm() {
 
       if (data.session) {
         await syncUserAction();
-        setSuccess("Hesabınız oluşturuldu. Giriş yapılıyor...");
-        window.location.href = "/";
+        window.location.href = "/admin";
         return;
       }
 
@@ -58,10 +57,10 @@ export default function RegisterForm() {
       <div className="rounded-3xl border border-slate-200/80 bg-white p-8 shadow-xl shadow-slate-200/50">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
-            Kayıt Ol
+            İşletme Hesabı Oluştur
           </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Rezervasyon yapabilmek için hesap oluşturun.
+            Yönetim paneli için işletme sahibi hesabı oluşturun. Müşteriler kayıt olmadan rezervasyon yapabilir.
           </p>
         </div>
 

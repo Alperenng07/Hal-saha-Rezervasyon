@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 type ActionResult = { success: true } | { error: string };
@@ -11,12 +11,15 @@ export async function createBooking(input: {
   date: string;
   startTime: string;
   endTime: string;
+  guestName: string;
+  guestPhone: string;
   notes?: string;
 }): Promise<ActionResult> {
-  const user = await requireAuth();
-  if (!user) {
-    return { error: "Rezervasyon yapmak için giriş yapmalısınız." };
-  }
+  const name = input.guestName.trim();
+  const phone = input.guestPhone.trim();
+
+  if (!name) return { error: "Ad soyad zorunludur." };
+  if (!phone) return { error: "Telefon numarası zorunludur." };
 
   const pitch = await prisma.pitch.findFirst({
     where: { id: input.pitchId, isActive: true },
@@ -48,11 +51,12 @@ export async function createBooking(input: {
     await prisma.booking.create({
       data: {
         pitchId: input.pitchId,
-        userId: user.id,
+        guestName: name,
+        guestPhone: phone,
         date: bookingDate,
         startTime: input.startTime,
         endTime: input.endTime,
-        notes: input.notes || null,
+        notes: input.notes?.trim() || null,
         status: "CONFIRMED",
       },
     });
@@ -66,18 +70,14 @@ export async function createBooking(input: {
 }
 
 export async function cancelBooking(bookingId: string): Promise<ActionResult> {
-  const user = await requireAuth();
-  if (!user) {
+  const admin = await requireAdmin();
+  if (!admin) {
     return { error: "Yetkisiz işlem." };
   }
 
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!booking) {
     return { error: "Rezervasyon bulunamadı." };
-  }
-
-  if (user.role !== "ADMIN" && booking.userId !== user.id) {
-    return { error: "Bu rezervasyonu iptal etme yetkiniz yok." };
   }
 
   await prisma.booking.update({

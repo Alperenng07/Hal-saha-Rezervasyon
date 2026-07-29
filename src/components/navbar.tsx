@@ -11,7 +11,7 @@ export default async function Navbar() {
   ]);
 
   const businessName = settings?.name ?? "Halı Saha";
-  const isLoggedIn = !!sessionUser;
+  const isAdmin = dbUser?.role === "ADMIN";
 
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-200/50 bg-white/70 backdrop-blur-md shadow-sm transition-all duration-300">
@@ -33,27 +33,28 @@ export default async function Navbar() {
           </span>
         </Link>
         <div className="flex items-center gap-6">
-          {dbUser?.role === "ADMIN" && (
-            <Link
-              href="/admin"
-              className="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-emerald-600 hover:after:w-full after:transition-all after:duration-300"
-            >
-              Yönetim Paneli
-            </Link>
+          {isAdmin && (
+            <>
+              <Link
+                href="/admin"
+                className="text-sm font-semibold text-slate-600 hover:text-emerald-600 transition-colors"
+              >
+                Yönetim Paneli
+              </Link>
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-slate-600 hidden sm:inline">
+                  {dbUser?.name || sessionUser?.email}
+                </span>
+                <LogoutButton />
+              </div>
+            </>
           )}
-          {isLoggedIn ? (
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-slate-600 hidden sm:inline">
-                {dbUser?.name || sessionUser?.email}
-              </span>
-              <LogoutButton />
-            </div>
-          ) : (
+          {!isAdmin && (
             <Link
               href="/login"
-              className="text-sm font-bold bg-slate-900 text-white px-6 py-2.5 rounded-full hover:bg-slate-800 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 active:scale-95 ring-1 ring-slate-900/10"
+              className="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors"
             >
-              Giriş Yap
+              İşletme Girişi
             </Link>
           )}
         </div>
