@@ -20,11 +20,13 @@ export async function getAdminEmailFromSettings(): Promise<string | null> {
 
 export async function resolveIsAdmin(email: string): Promise<boolean> {
   const normalized = email.toLowerCase();
-  const envAdmins = getEnvAdminEmails();
-  if (envAdmins.includes(normalized)) return true;
 
+  // Ayarlardan tanımlı admin e-postası önceliklidir (panelden değiştirildiğinde geçerli olan budur)
   const dbAdmin = await getAdminEmailFromSettings();
-  return dbAdmin ? normalized === dbAdmin : false;
+  if (dbAdmin) return normalized === dbAdmin;
+
+  const envAdmins = getEnvAdminEmails();
+  return envAdmins.includes(normalized);
 }
 
 export async function syncAdminRoles(adminEmail: string) {
@@ -88,11 +90,13 @@ export async function syncUserFromSession() {
 }
 
 export async function requireAdmin() {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "ADMIN") {
-    return null;
-  }
-  return user;
+  const sessionUser = await getSessionUser();
+  if (!sessionUser?.email) return null;
+
+  if (!(await resolveIsAdmin(sessionUser.email))) return null;
+
+  const user = await syncUserFromSession();
+  return user?.role === "ADMIN" ? user : null;
 }
 
 export async function requireAuth() {

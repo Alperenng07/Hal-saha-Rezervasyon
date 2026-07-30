@@ -6,9 +6,9 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { syncUserAction } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 
-export default function RegisterForm() {
+export default function RegisterForm({ adminEmail }: { adminEmail: string | null }) {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(adminEmail ?? "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -21,6 +21,13 @@ export default function RegisterForm() {
     setLoading(true);
 
     try {
+      if (adminEmail && email.trim().toLowerCase() !== adminEmail.toLowerCase()) {
+        setError(
+          `Yalnızca kayıtlı admin e-postası ile hesap oluşturabilirsiniz: ${adminEmail}`
+        );
+        return;
+      }
+
       const supabase = createSupabaseBrowserClient();
       const { data, error: authError } = await supabase.auth.signUp({
         email,
@@ -62,6 +69,12 @@ export default function RegisterForm() {
           <p className="mt-2 text-sm text-slate-500">
             Yönetim paneli için işletme sahibi hesabı oluşturun.
           </p>
+          {adminEmail && (
+            <p className="mt-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+              Admin e-postası ayarlarda tanımlıdır. Kayıt için{" "}
+              <span className="font-semibold">{adminEmail}</span> kullanın.
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">

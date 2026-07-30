@@ -7,9 +7,9 @@ import { syncUserAction } from "@/lib/actions/auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
-export default function LoginForm() {
+export default function LoginForm({ adminEmail }: { adminEmail: string | null }) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(adminEmail ?? "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -61,6 +61,12 @@ export default function LoginForm() {
           <p className="mt-2 text-sm text-slate-500">
             Yönetim paneline erişmek için işletme sahibi hesabınızla giriş yapın.
           </p>
+          {adminEmail && (
+            <p className="mt-3 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-600">
+              Kayıtlı admin e-postası:{" "}
+              <span className="font-semibold text-slate-800">{adminEmail}</span>
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -76,7 +82,7 @@ export default function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/20"
-              placeholder="ornek@email.com"
+              placeholder={adminEmail ?? "ornek@email.com"}
             />
           </div>
 

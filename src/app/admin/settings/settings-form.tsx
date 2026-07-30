@@ -152,7 +152,9 @@ export default function SettingsForm({ settings }: { settings: Settings | null }
                 placeholder="admin@example.com"
               />
               <p className="text-xs text-slate-500 mt-1">
-                Bu e-posta ile kayıtlı kullanıcı yönetim paneline erişebilir.
+                Bu e-posta ile giriş yapılır. Değiştirdiyseniz yeni e-posta ile{" "}
+                <strong>/register</strong> sayfasından hesap oluşturup o adresle giriş yapın.
+                Eski e-posta artık admin olamaz.
               </p>
             </div>
           </div>
