@@ -4,6 +4,8 @@ import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { notifyOwnerNewBooking } from "@/lib/notifications";
+import { getActualSlotDateTime } from "@/lib/slots";
+import { isBefore, startOfDay } from "date-fns";
 
 type ActionResult = { success: true } | { error: string };
 
@@ -29,10 +31,13 @@ export async function createBooking(input: {
     return { error: "Saha bulunamadı." };
   }
 
-  const bookingDate = new Date(input.date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (bookingDate < today) {
+  const bookingDate = startOfDay(new Date(input.date));
+  const actualSlotTime = getActualSlotDateTime(
+    bookingDate,
+    input.startTime,
+    pitch.openTime
+  );
+  if (isBefore(actualSlotTime, new Date())) {
     return { error: "Geçmiş bir tarih için rezervasyon yapılamaz." };
   }
 
@@ -128,7 +133,7 @@ export async function createBookingAdmin(input: {
   const pitch = await prisma.pitch.findUnique({ where: { id: input.pitchId } });
   if (!pitch) return { error: "Saha bulunamadı." };
 
-  const bookingDate = new Date(input.date);
+  const bookingDate = startOfDay(new Date(input.date));
 
   const existing = await prisma.booking.findFirst({
     where: {

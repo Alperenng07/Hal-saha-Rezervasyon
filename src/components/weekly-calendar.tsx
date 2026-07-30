@@ -14,7 +14,7 @@ import {
 } from "date-fns";
 import { tr } from "date-fns/locale";
 import { createBooking } from "@/lib/actions/bookings";
-import { generateSlots, normalizeTime } from "@/lib/slots";
+import { generateSlots, normalizeTime, getActualSlotDateTime, getCurrentBusinessDay, getBookingDate, isOvernightSlot, formatSlotLabel } from "@/lib/slots";
 
 type Pitch = {
   id: string;
@@ -78,51 +78,61 @@ export default function WeeklyCalendar({
     addDays(startOfCurrentWeek, i)
   );
 
+  const pitch = pitches.find((p) => p.id === selectedPitch);
+
   useEffect(() => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const days = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
     const today = startOfDay(new Date());
-    const defaultDay = days.find((day) => !isBefore(day, today)) ?? days[0];
+    const businessToday = pitch
+      ? getCurrentBusinessDay(pitch.openTime, pitch.closeTime)
+      : today;
+    const defaultDay =
+      days.find((day) => !isBefore(day, businessToday)) ??
+      days.find((day) => isSameDay(day, businessToday)) ??
+      days[0];
     setSelectedDay(defaultDay);
-  }, [currentDate]);
-
-  const pitch = pitches.find((p) => p.id === selectedPitch);
+  }, [currentDate, pitch?.id, pitch?.openTime, pitch?.closeTime]);
 
   const slots = pitch ? generateSlots(pitch) : [];
+  const openTime = pitch?.openTime ?? "12:00";
+  const businessToday = pitch
+    ? getCurrentBusinessDay(pitch.openTime, pitch.closeTime)
+    : startOfDay(new Date());
+
+  const isBusinessToday = (day: Date) => isSameDay(day, businessToday);
 
   const handlePrevWeek = () => setCurrentDate(addDays(currentDate, -7));
   const handleNextWeek = () => setCurrentDate(addDays(currentDate, 7));
 
-  const isSlotBooked = (date: Date, startTime: string) => {
+  const isSlotBooked = (businessDay: Date, startTime: string) => {
+    const bookingDate = getBookingDate(businessDay, startTime, openTime);
     return initialBookings.some(
       (b) =>
         b.pitchId === selectedPitch &&
-        isSameDay(new Date(b.date), date) &&
+        isSameDay(new Date(b.date), bookingDate) &&
         normalizeTime(b.startTime) === startTime
     );
   };
 
-  const isSlotSubscribed = (date: Date, startTime: string) => {
-    const day = startOfDay(date);
+  const isSlotSubscribed = (businessDay: Date, startTime: string) => {
+    const bookingDate = getBookingDate(businessDay, startTime, openTime);
+    const day = startOfDay(bookingDate);
     return subscriptions.some(
       (s) =>
         s.isActive &&
         s.pitchId === selectedPitch &&
-        s.dayOfWeek === getDay(date) &&
+        s.dayOfWeek === getDay(bookingDate) &&
         normalizeTime(s.startTime) === startTime &&
         !isBefore(day, startOfDay(new Date(s.startDate))) &&
         (!s.endDate || !isBefore(startOfDay(new Date(s.endDate)), day))
     );
   };
 
-  const isSlotPast = (day: Date, startTime: string) => {
-    const today = startOfDay(new Date());
-    if (isBefore(day, today)) return true;
-    if (isSameDay(day, new Date())) {
-      const slotTime = parse(startTime, "HH:mm", day);
-      return isBefore(slotTime, new Date());
-    }
-    return false;
+  const isSlotPast = (businessDay: Date, startTime: string) => {
+    if (!pitch) return false;
+    const actual = getActualSlotDateTime(businessDay, startTime, openTime);
+    return isBefore(actual, new Date());
   };
 
   const handleReserveClick = (day: Date, startTime: string, endTime: string) => {
@@ -131,7 +141,7 @@ export default function WeeklyCalendar({
     setGuestPhone("");
     setNotes("");
     setSelectedSlot({
-      date: day,
+      date: getBookingDate(day, startTime, openTime),
       startTime,
       endTime,
       pitchName: pitch?.name || "",
@@ -216,7 +226,7 @@ export default function WeeklyCalendar({
       <div className="md:hidden px-3 pb-4">
         <div className="flex gap-2 overflow-x-auto py-3 -mx-1 px-1 scroll-touch">
           {weekDays.map((day) => {
-            const isToday = isSameDay(day, new Date());
+            const isToday = isBusinessToday(day);
             const isSelected = isSameDay(day, selectedDay);
             return (
               <button
@@ -259,8 +269,8 @@ export default function WeeklyCalendar({
                   key={slot.startTime}
                   className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2.5 shadow-sm"
                 >
-                  <div className="shrink-0 w-[4.5rem] text-center text-xs font-bold text-slate-600 bg-slate-50 rounded-lg py-2">
-                    {slot.startTime}
+                  <div className="shrink-0 w-[4.5rem] text-center text-[10px] font-bold text-slate-600 bg-slate-50 rounded-lg py-2 leading-tight">
+                    {formatSlotLabel(selectedDay, slot.startTime, openTime)}
                   </div>
                   {booked ? (
                     <div className="flex-1 py-2.5 bg-rose-50 border border-rose-100 text-rose-600 rounded-lg text-center font-bold text-xs">
@@ -301,7 +311,7 @@ export default function WeeklyCalendar({
                 Saat
               </th>
               {weekDays.map((day, i) => {
-                const isToday = isSameDay(day, new Date());
+                const isToday = isBusinessToday(day);
                 return (
                   <th
                     key={i}
@@ -338,13 +348,16 @@ export default function WeeklyCalendar({
                 <td className="p-3 border-b border-slate-100 text-center sticky left-0 z-10 bg-white/95 backdrop-blur-md">
                   <div className="inline-block px-3 py-1 rounded-md bg-slate-100/80 text-slate-600 font-semibold text-xs tracking-wide">
                     {slot.startTime}
+                    {isOvernightSlot(slot.startTime, openTime) && (
+                      <span className="block text-[10px] font-normal text-slate-400">ertesi sabah</span>
+                    )}
                   </div>
                 </td>
                 {weekDays.map((day, j) => {
                   const booked = isSlotBooked(day, slot.startTime);
                   const subscribed = isSlotSubscribed(day, slot.startTime);
                   const isPast = isSlotPast(day, slot.startTime);
-                  const isToday = isSameDay(day, new Date());
+                  const isToday = isBusinessToday(day);
                   return (
                     <td
                       key={j}
@@ -399,7 +412,12 @@ export default function WeeklyCalendar({
                 <span className="font-semibold text-slate-900 text-right">{selectedSlot.pitchName}</span>
                 <span className="text-slate-500">Tarih</span>
                 <span className="font-semibold text-slate-900 text-right">
-                  {format(selectedSlot.date, "d MMM yyyy", { locale: tr })}
+                  {format(selectedSlot.date, "d MMM yyyy, EEEE", { locale: tr })}
+                  {isOvernightSlot(selectedSlot.startTime, openTime) && (
+                    <span className="block text-xs font-normal text-slate-500">
+                      Gece devamı ({format(addDays(selectedSlot.date, 1), "d MMM", { locale: tr })} sabahı)
+                    </span>
+                  )}
                 </span>
                 <span className="text-slate-500">Saat</span>
                 <span className="font-semibold text-brand-strong text-right">
