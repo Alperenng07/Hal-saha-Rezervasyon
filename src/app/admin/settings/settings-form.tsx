@@ -178,9 +178,12 @@ export default function SettingsForm({ settings }: { settings: Settings | null }
               <span>
                 <span className="block text-sm font-medium text-slate-800">E-posta bildirimi</span>
                 <span className="block text-xs text-slate-500 mt-0.5">
-                  Admin e-postasına gönderilir. Vercel ortam değişkenlerine{" "}
-                  <code className="text-xs bg-slate-100 px-1 rounded">RESEND_API_KEY</code> eklemeniz
-                  gerekir.
+                  Admin e-postasına gönderilir. Vercel&apos;de{" "}
+                  <code className="text-xs bg-slate-100 px-1 rounded">RESEND_API_KEY</code> ve{" "}
+                  <code className="text-xs bg-slate-100 px-1 rounded">RESEND_FROM_EMAIL</code> tanımlayın,
+                  sonra yeniden deploy edin. Test modunda (
+                  <code className="text-xs bg-slate-100 px-1 rounded">onboarding@resend.dev</code>) e-posta
+                  yalnızca Resend hesabınızdaki doğrulanmış adrese gider — admin e-postası ile aynı olmalı.
                 </span>
               </span>
             </label>

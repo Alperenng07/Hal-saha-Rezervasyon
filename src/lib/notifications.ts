@@ -88,14 +88,22 @@ function normalizeWhatsAppPhone(phone: string): string | null {
   return digits;
 }
 
+function getResendFromAddress(): string {
+  const configured = process.env.RESEND_FROM_EMAIL?.trim();
+  if (!configured) return "Halı Saha <onboarding@resend.dev>";
+  if (configured.includes("<")) return configured;
+  return `Halı Saha <${configured}>`;
+}
+
 async function sendEmail(to: string, subject: string, text: string, html: string) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY?.trim();
   if (!apiKey) {
     console.warn("[notifications] RESEND_API_KEY tanımlı değil, e-posta atlanıyor.");
     return;
   }
 
-  const from = process.env.RESEND_FROM_EMAIL || "Halı Saha <onboarding@resend.dev>";
+  const from = getResendFromAddress();
+  console.info("[notifications] E-posta gönderiliyor:", { from, to, subject });
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -109,7 +117,11 @@ async function sendEmail(to: string, subject: string, text: string, html: string
   if (!res.ok) {
     const body = await res.text();
     console.error("[notifications] E-posta gönderilemedi:", res.status, body);
+    throw new Error(`Resend ${res.status}: ${body}`);
   }
+
+  const data = (await res.json()) as { id?: string };
+  console.info("[notifications] E-posta gönderildi:", data.id ?? "ok");
 }
 
 async function sendWhatsApp(phone: string, apiKey: string, text: string) {
@@ -142,13 +154,18 @@ export async function notifyOwnerNewBooking(
 
   if (settings.notifyEmailOnBooking && settings.adminEmail) {
     tasks.push(sendEmail(settings.adminEmail, subject, text, html));
+  } else if (settings.notifyEmailOnBooking && !settings.adminEmail) {
+    console.warn("[notifications] Admin e-postası tanımlı değil, e-posta atlanıyor.");
   }
 
   if (settings.notifyWhatsAppOnBooking && settings.phone && settings.whatsappApiKey) {
     tasks.push(sendWhatsApp(settings.phone, settings.whatsappApiKey, text));
   }
 
-  if (tasks.length === 0) return;
+  if (tasks.length === 0) {
+    console.warn("[notifications] Aktif bildirim kanalı yok, gönderim atlandı.");
+    return;
+  }
 
   await Promise.allSettled(tasks);
 }
