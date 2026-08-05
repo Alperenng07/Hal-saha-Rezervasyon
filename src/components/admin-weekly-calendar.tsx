@@ -130,15 +130,17 @@ export default function AdminWeeklyCalendar({
     );
   };
 
-  const getSubscriptionAtSlot = (businessDay: Date, startTime: string) => {
+  const getSubscriptionAtSlot = (businessDay: Date, startTime: string): Subscription | undefined => {
     const bookingDate = getBookingDate(businessDay, startTime, openTime);
-    return findBlockingSubscription(
+    const blocking = findBlockingSubscription(
       subscriptions,
       bookingDate,
       selectedPitch,
       startTime,
       subscriptionExceptions
     );
+    if (!blocking) return undefined;
+    return subscriptions.find((subscription) => subscription.id === blocking.id);
   };
 
   const isSlotPast = (businessDay: Date, startTime: string) => {

@@ -1,4 +1,10 @@
-import { getBusinessSettings, getPitches, getBookings, getActiveSubscriptions } from "@/lib/data";
+import {
+  getBusinessSettings,
+  getPitches,
+  getBookings,
+  getActiveSubscriptions,
+  getSubscriptionExceptions,
+} from "@/lib/data";
 import WeeklyCalendar from "@/components/weekly-calendar";
 
 export default async function Home() {
