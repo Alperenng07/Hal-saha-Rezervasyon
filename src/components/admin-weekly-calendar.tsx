@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   addDays,
@@ -92,6 +92,9 @@ export default function AdminWeeklyCalendar({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedPitch, setSelectedPitch] = useState(pitches[0]?.id || "");
   const [selectedDay, setSelectedDay] = useState(() => new Date());
+  const [bookings, setBookings] = useState(initialBookings);
+  const [activeSubscriptions, setActiveSubscriptions] = useState(subscriptions);
+  const [exceptions, setExceptions] = useState(subscriptionExceptions);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [slotContext, setSlotContext] = useState<SlotContext | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -106,23 +109,73 @@ export default function AdminWeeklyCalendar({
   const pitch = pitches.find((p) => p.id === selectedPitch);
   const openTime = pitch?.openTime ?? "12:00";
   const slots = pitch ? generateSlots(pitch) : [];
-  const businessToday = pitch
-    ? getCurrentBusinessDay(pitch.openTime, pitch.closeTime)
-    : startOfDay(new Date());
+  const businessToday = useMemo(
+    () =>
+      pitch
+        ? getCurrentBusinessDay(pitch.openTime, pitch.closeTime)
+        : startOfDay(new Date()),
+    [pitch?.openTime, pitch?.closeTime]
+  );
+
+  useEffect(() => {
+    setBookings(initialBookings);
+  }, [initialBookings]);
+
+  useEffect(() => {
+    setActiveSubscriptions(subscriptions);
+  }, [subscriptions]);
+
+  useEffect(() => {
+    setExceptions(subscriptionExceptions);
+  }, [subscriptionExceptions]);
+
+  const pickDefaultDay = (weekStart: Date) => {
+    const days = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
+    return (
+      days.find((day) => !isBefore(day, businessToday)) ??
+      days.find((day) => isSameDay(day, businessToday)) ??
+      days[0]
+    );
+  };
 
   useEffect(() => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const days = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
-    const defaultDay =
-      days.find((day) => !isBefore(day, businessToday)) ??
-      days.find((day) => isSameDay(day, businessToday)) ??
-      days[0];
-    setSelectedDay(defaultDay);
-  }, [currentDate, pitch?.id, pitch?.openTime, pitch?.closeTime, businessToday]);
+    setSelectedDay(pickDefaultDay(weekStart));
+  }, [pitch?.id]);
+
+  const handlePrevWeek = () => {
+    const newDate = addDays(currentDate, -7);
+    setCurrentDate(newDate);
+    setSelectedDay(pickDefaultDay(startOfWeek(newDate, { weekStartsOn: 1 })));
+  };
+
+  const handleNextWeek = () => {
+    const newDate = addDays(currentDate, 7);
+    setCurrentDate(newDate);
+    setSelectedDay(pickDefaultDay(startOfWeek(newDate, { weekStartsOn: 1 })));
+  };
+
+  const handlePrevDay = () => {
+    const newDay = addDays(selectedDay, -1);
+    if (!weekDays.some((day) => isSameDay(day, newDay))) {
+      const newDate = addDays(currentDate, -7);
+      setCurrentDate(newDate);
+    }
+    setSelectedDay(newDay);
+  };
+
+  const handleNextDay = () => {
+    const newDay = addDays(selectedDay, 1);
+    if (!weekDays.some((day) => isSameDay(day, newDay))) {
+      const newDate = addDays(currentDate, 7);
+      setCurrentDate(newDate);
+    }
+    setSelectedDay(newDay);
+  };
 
   const getBookingAtSlot = (businessDay: Date, startTime: string) => {
     const bookingDate = getBookingDate(businessDay, startTime, openTime);
-    return initialBookings.find(
+    return bookings.find(
       (booking) =>
         booking.pitchId === selectedPitch &&
         isSameDay(new Date(booking.date), bookingDate) &&
@@ -133,14 +186,14 @@ export default function AdminWeeklyCalendar({
   const getSubscriptionAtSlot = (businessDay: Date, startTime: string): Subscription | undefined => {
     const bookingDate = getBookingDate(businessDay, startTime, openTime);
     const blocking = findBlockingSubscription(
-      subscriptions,
+      activeSubscriptions,
       bookingDate,
       selectedPitch,
       startTime,
-      subscriptionExceptions
+      exceptions
     );
     if (!blocking) return undefined;
-    return subscriptions.find((subscription) => subscription.id === blocking.id);
+    return activeSubscriptions.find((subscription) => subscription.id === blocking.id);
   };
 
   const isSlotPast = (businessDay: Date, startTime: string) => {
@@ -234,6 +287,20 @@ export default function AdminWeeklyCalendar({
         return;
       }
 
+      setBookings((prev) => [
+        ...prev,
+        {
+          id: `local-${Date.now()}`,
+          pitchId: selectedPitch,
+          date: slotContext.bookingDate,
+          startTime: slotContext.startTime,
+          endTime: slotContext.endTime,
+          status: "CONFIRMED",
+          guestName: guestName.trim(),
+          guestPhone: guestPhone.trim(),
+          isManual: true,
+        },
+      ]);
       closeModal();
       router.refresh();
     });
@@ -248,6 +315,7 @@ export default function AdminWeeklyCalendar({
         setError(result.error);
         return;
       }
+      setBookings((prev) => prev.filter((booking) => booking.id !== selectedBooking.id));
       closeModal();
       router.refresh();
     });
@@ -265,6 +333,13 @@ export default function AdminWeeklyCalendar({
         setError(result.error);
         return;
       }
+      setExceptions((prev) => [
+        ...prev,
+        {
+          subscriptionId: selectedSubscription.id,
+          date: slotContext.bookingDate,
+        },
+      ]);
       closeModal();
       router.refresh();
     });
@@ -279,6 +354,13 @@ export default function AdminWeeklyCalendar({
         setError(result.error);
         return;
       }
+      setActiveSubscriptions((prev) =>
+        prev.map((subscription) =>
+          subscription.id === selectedSubscription.id
+            ? { ...subscription, isActive: false }
+            : subscription
+        )
+      );
       closeModal();
       router.refresh();
     });
@@ -380,7 +462,7 @@ export default function AdminWeeklyCalendar({
         </div>
         <div className="flex items-center justify-between gap-3">
           <button
-            onClick={() => setCurrentDate(addDays(currentDate, -7))}
+            onClick={handlePrevWeek}
             className="px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
             aria-label="Önceki hafta"
           >
@@ -394,7 +476,7 @@ export default function AdminWeeklyCalendar({
             <p className="text-xs text-emerald-700 font-medium">Takvimden ekle / iptal et</p>
           </div>
           <button
-            onClick={() => setCurrentDate(addDays(currentDate, 7))}
+            onClick={handleNextWeek}
             className="px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
             aria-label="Sonraki hafta"
           >
@@ -417,30 +499,48 @@ export default function AdminWeeklyCalendar({
 
       {/* Mobil */}
       <div className="md:hidden px-3 pb-4">
-        <div className="flex gap-2 overflow-x-auto py-3 scroll-touch">
-          {weekDays.map((day) => {
-            const isSelected = isSameDay(day, selectedDay);
-            const isToday = isSameDay(day, businessToday);
-            return (
-              <button
-                key={day.toISOString()}
-                type="button"
-                onClick={() => setSelectedDay(day)}
-                className={`shrink-0 flex flex-col items-center min-w-[3.25rem] px-2 py-2 rounded-xl border ${
-                  isSelected
-                    ? "bg-emerald-600 border-emerald-600 text-white"
-                    : isToday
-                      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                      : "bg-white border-slate-200 text-slate-600"
-                }`}
-              >
-                <span className="text-[10px] font-bold uppercase">
-                  {format(day, "EEE", { locale: tr })}
-                </span>
-                <span className="text-base font-bold">{format(day, "d")}</span>
-              </button>
-            );
-          })}
+        <div className="flex items-center gap-2 py-3">
+          <button
+            type="button"
+            onClick={handlePrevDay}
+            className="shrink-0 px-2.5 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+            aria-label="Önceki gün"
+          >
+            ←
+          </button>
+          <div className="flex gap-2 overflow-x-auto scroll-touch flex-1">
+            {weekDays.map((day) => {
+              const isSelected = isSameDay(day, selectedDay);
+              const isToday = isSameDay(day, businessToday);
+              return (
+                <button
+                  key={day.toISOString()}
+                  type="button"
+                  onClick={() => setSelectedDay(day)}
+                  className={`shrink-0 flex flex-col items-center min-w-[3.25rem] px-2 py-2 rounded-xl border ${
+                    isSelected
+                      ? "bg-emerald-600 border-emerald-600 text-white"
+                      : isToday
+                        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                        : "bg-white border-slate-200 text-slate-600"
+                  }`}
+                >
+                  <span className="text-[10px] font-bold uppercase">
+                    {format(day, "EEE", { locale: tr })}
+                  </span>
+                  <span className="text-base font-bold">{format(day, "d")}</span>
+                </button>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={handleNextDay}
+            className="shrink-0 px-2.5 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+            aria-label="Sonraki gün"
+          >
+            →
+          </button>
         </div>
 
         <p className="text-xs text-slate-500 mb-3">
