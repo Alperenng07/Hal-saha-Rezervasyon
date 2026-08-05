@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   getBusinessSettings,
   getPitches,
@@ -49,6 +50,30 @@ export default async function AdminDashboard() {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
           <h3 className="text-slate-500 text-sm font-medium">Aktif Abonelik</h3>
           <p className="text-3xl font-bold text-slate-800 mt-2">{subscriptionCount}</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 sm:p-6">
+        <h2 className="text-lg font-bold text-slate-800 mb-3">Hızlı Erişim</h2>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/admin/calendar"
+            className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+          >
+            Takvimi Aç
+          </Link>
+          <Link
+            href="/admin/bookings"
+            className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors"
+          >
+            Rezervasyonlar
+          </Link>
+          <Link
+            href="/admin/subscriptions"
+            className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors"
+          >
+            Abonelikler
+          </Link>
         </div>
       </div>
 
