@@ -130,11 +130,11 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
-    @apply font-sans;
+    @apply font-sans overflow-x-hidden;
+  }
+  body {
+    @apply bg-background text-foreground overflow-x-hidden max-w-[100vw];
   }
 }
 
@@ -327,6 +327,10 @@
     border-radius: 999px;
   }
   .scroll-touch::-webkit-scrollbar-thumb:hover { background: var(--brand-400); }
+
+  .safe-area-pb {
+    padding-bottom: max(0.375rem, env(safe-area-inset-bottom, 0px));
+  }
 
   .pitch-tab {
     cursor: pointer;

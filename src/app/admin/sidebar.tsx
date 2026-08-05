@@ -129,7 +129,7 @@ export default function Sidebar({ adminName, adminEmail }: SidebarProps) {
       </aside>
 
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-200 safe-area-pb">
-        <div className="grid grid-cols-5 gap-1 px-1 py-1.5">
+        <div className="grid grid-cols-5 gap-0.5 px-0.5 py-1">
           {[
             { href: "/admin/calendar", icon: CalendarRange, label: "Takvim" },
             { href: "/admin/bookings", icon: CalendarCheck, label: "Rezerv." },
@@ -146,12 +146,12 @@ export default function Sidebar({ adminName, adminEmail }: SidebarProps) {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg text-[10px] font-semibold ${
+                className={`flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-semibold min-w-0 ${
                   isActive ? "text-emerald-700 bg-emerald-50" : "text-slate-500"
                 }`}
               >
-                <Icon size={18} />
-                <span>{link.label}</span>
+                <Icon size={17} className="shrink-0" />
+                <span className="truncate max-w-full px-0.5">{link.label}</span>
               </Link>
             );
           })}

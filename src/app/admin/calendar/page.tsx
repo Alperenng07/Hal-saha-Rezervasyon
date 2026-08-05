@@ -17,10 +17,10 @@ export default async function AdminCalendarPage() {
   const activePitches = pitches.filter((pitch) => pitch.isActive);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-3 sm:space-y-4 md:space-y-6 min-w-0">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Takvim</h1>
-        <p className="text-slate-500 mt-1 text-sm sm:text-base">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900">Takvim</h1>
+        <p className="text-slate-500 mt-1 text-xs sm:text-sm md:text-base">
           Boş slota dokunarak rezervasyon ekleyin; dolu veya abone slota dokunarak iptal edin.
         </p>
       </div>

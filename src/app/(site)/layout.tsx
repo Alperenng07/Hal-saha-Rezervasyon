@@ -19,7 +19,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const themeClass = getThemeClass(settings?.themeColor);
 
   return (
-    <div className={`min-h-screen flex flex-col site-themed ${themeClass}`}>
+    <div className={`min-h-screen flex flex-col site-themed ${themeClass} overflow-x-hidden`}>
       <Navbar />
       <main className="flex-1">{children}</main>
       <footer className="border-t border-slate-200 bg-white py-4 sm:py-6 mt-auto">

@@ -7,7 +7,7 @@ export default async function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-200/50 bg-white/80 backdrop-blur-md shadow-sm">
-      <div className="container mx-auto px-3 sm:px-4 lg:px-8 h-14 sm:h-16 md:h-20 flex items-center">
+      <div className="container mx-auto px-2 sm:px-4 lg:px-8 h-14 sm:h-16 md:h-20 flex items-center min-w-0">
         <Link
           href="/"
           className="flex items-center gap-2 sm:gap-3 group min-w-0 transition-opacity hover:opacity-90 active:scale-[0.99]"

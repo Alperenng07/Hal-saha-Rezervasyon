@@ -380,8 +380,8 @@ export default function AdminWeeklyCalendar({
         <button
           type="button"
           onClick={() => openBookingCancelModal(booking)}
-          className={`w-full bg-rose-50 border border-rose-200 text-rose-700 rounded-lg font-semibold hover:bg-rose-100 transition-colors ${
-            compact ? "py-2.5 text-xs" : "absolute inset-1.5 flex flex-col items-center justify-center text-xs"
+          className={`w-full bg-rose-50 border border-rose-200 text-rose-700 rounded-lg font-semibold hover:bg-rose-100 transition-colors min-w-0 ${
+            compact ? "py-2 text-[11px] sm:text-xs truncate px-1" : "absolute inset-1.5 flex flex-col items-center justify-center text-xs"
           }`}
         >
           <span>DOLU</span>
@@ -401,8 +401,8 @@ export default function AdminWeeklyCalendar({
           onClick={() =>
             openSubscriptionCancelModal(subscription, businessDay, slot.startTime, slot.endTime)
           }
-          className={`w-full bg-blue-50 border border-blue-200 text-blue-800 rounded-lg font-semibold hover:bg-blue-100 transition-colors ${
-            compact ? "py-2.5 text-xs" : "absolute inset-1.5 flex flex-col items-center justify-center text-xs"
+          className={`w-full bg-blue-50 border border-blue-200 text-blue-800 rounded-lg font-semibold hover:bg-blue-100 transition-colors min-w-0 ${
+            compact ? "py-2 text-[11px] sm:text-xs truncate px-1" : "absolute inset-1.5 flex flex-col items-center justify-center text-xs"
           }`}
         >
           <span>ABONE</span>
@@ -420,8 +420,8 @@ export default function AdminWeeklyCalendar({
         <button
           type="button"
           onClick={() => handleSlotClick(businessDay, slot.startTime, slot.endTime)}
-          className={`w-full bg-slate-50 text-slate-500 border border-dashed border-slate-200 rounded-lg font-medium hover:bg-slate-100 transition-colors ${
-            compact ? "py-2.5 text-xs" : "absolute inset-1.5 flex items-center justify-center text-xs"
+          className={`w-full bg-slate-50 text-slate-500 border border-dashed border-slate-200 rounded-lg font-medium hover:bg-slate-100 transition-colors min-w-0 ${
+            compact ? "py-2 text-[11px] sm:text-xs" : "absolute inset-1.5 flex items-center justify-center text-xs"
           }`}
         >
           {compact ? "Geçmiş · Ekle" : "Geçmiş · Ekle"}
@@ -433,8 +433,8 @@ export default function AdminWeeklyCalendar({
       <button
         type="button"
         onClick={() => handleSlotClick(businessDay, slot.startTime, slot.endTime)}
-        className={`w-full bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg font-bold hover:bg-emerald-100 transition-colors ${
-          compact ? "py-2.5 text-xs" : "absolute inset-1.5 flex items-center justify-center text-xs"
+        className={`w-full bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg font-bold hover:bg-emerald-100 transition-colors min-w-0 ${
+          compact ? "py-2 text-[11px] sm:text-xs truncate px-1" : "absolute inset-1.5 flex items-center justify-center text-xs"
         }`}
       >
         {compact ? `Ekle · ${slot.endTime}` : "EKLE"}
@@ -443,14 +443,14 @@ export default function AdminWeeklyCalendar({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div className="p-3 sm:p-4 border-b border-slate-100 flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
-        <div className="flex gap-2 overflow-x-auto scroll-touch">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden max-w-full">
+      <div className="p-2 sm:p-3 md:p-4 border-b border-slate-100 flex flex-col gap-2 sm:gap-3 md:flex-row md:justify-between md:items-center">
+        <div className="flex gap-1.5 overflow-x-auto scroll-touch min-w-0 -mx-0.5 px-0.5">
           {pitches.map((p) => (
             <button
               key={p.id}
               onClick={() => setSelectedPitch(p.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold shrink-0 transition-colors ${
+              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold shrink-0 transition-colors ${
                 selectedPitch === p.id
                   ? "bg-emerald-600 text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -460,24 +460,26 @@ export default function AdminWeeklyCalendar({
             </button>
           ))}
         </div>
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-3 min-w-0">
           <button
             onClick={handlePrevWeek}
-            className="px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+            className="shrink-0 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm"
             aria-label="Önceki hafta"
           >
             ←
           </button>
-          <div className="text-center min-w-0">
-            <p className="font-bold text-slate-900 text-sm sm:text-base">
+          <div className="text-center min-w-0 flex-1 px-1">
+            <p className="font-bold text-slate-900 text-[11px] sm:text-sm md:text-base leading-tight">
               {format(startOfCurrentWeek, "d MMM", { locale: tr })} –{" "}
               {format(addDays(startOfCurrentWeek, 6), "d MMM yyyy", { locale: tr })}
             </p>
-            <p className="text-xs text-emerald-700 font-medium">Takvimden ekle / iptal et</p>
+            <p className="text-[10px] sm:text-xs text-emerald-700 font-medium truncate">
+              Takvimden ekle / iptal et
+            </p>
           </div>
           <button
             onClick={handleNextWeek}
-            className="px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+            className="shrink-0 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm"
             aria-label="Sonraki hafta"
           >
             →
@@ -485,7 +487,7 @@ export default function AdminWeeklyCalendar({
         </div>
       </div>
 
-      <div className="px-3 py-2 border-b border-slate-100 flex flex-wrap gap-3 text-xs text-slate-600">
+      <div className="px-2 sm:px-3 py-1.5 sm:py-2 border-b border-slate-100 flex flex-wrap gap-x-2 gap-y-1 text-[10px] sm:text-xs text-slate-600">
         <span className="inline-flex items-center gap-1.5">
           <span className="w-3 h-3 rounded bg-emerald-100 border border-emerald-200" /> Boş · Ekle
         </span>
@@ -498,17 +500,17 @@ export default function AdminWeeklyCalendar({
       </div>
 
       {/* Mobil */}
-      <div className="md:hidden px-3 pb-4">
-        <div className="flex items-center gap-2 py-3">
+      <div className="md:hidden px-2 sm:px-3 pb-3 sm:pb-4 min-w-0">
+        <div className="flex items-center gap-1 sm:gap-2 py-2 sm:py-3 min-w-0">
           <button
             type="button"
             onClick={handlePrevDay}
-            className="shrink-0 px-2.5 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+            className="shrink-0 px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm"
             aria-label="Önceki gün"
           >
             ←
           </button>
-          <div className="flex gap-2 overflow-x-auto scroll-touch flex-1">
+          <div className="flex gap-1 sm:gap-2 overflow-x-auto scroll-touch flex-1 min-w-0">
             {weekDays.map((day) => {
               const isSelected = isSameDay(day, selectedDay);
               const isToday = isSameDay(day, businessToday);
@@ -517,7 +519,7 @@ export default function AdminWeeklyCalendar({
                   key={day.toISOString()}
                   type="button"
                   onClick={() => setSelectedDay(day)}
-                  className={`shrink-0 flex flex-col items-center min-w-[3.25rem] px-2 py-2 rounded-xl border ${
+                  className={`shrink-0 flex flex-col items-center min-w-[2.65rem] sm:min-w-[3rem] px-1.5 sm:px-2 py-1.5 sm:py-2 rounded-xl border ${
                     isSelected
                       ? "bg-emerald-600 border-emerald-600 text-white"
                       : isToday
@@ -525,10 +527,10 @@ export default function AdminWeeklyCalendar({
                         : "bg-white border-slate-200 text-slate-600"
                   }`}
                 >
-                  <span className="text-[10px] font-bold uppercase">
+                  <span className="text-[9px] sm:text-[10px] font-bold uppercase">
                     {format(day, "EEE", { locale: tr })}
                   </span>
-                  <span className="text-base font-bold">{format(day, "d")}</span>
+                  <span className="text-sm sm:text-base font-bold">{format(day, "d")}</span>
                 </button>
               );
             })}
@@ -536,27 +538,27 @@ export default function AdminWeeklyCalendar({
           <button
             type="button"
             onClick={handleNextDay}
-            className="shrink-0 px-2.5 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+            className="shrink-0 px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm"
             aria-label="Sonraki gün"
           >
             →
           </button>
         </div>
 
-        <p className="text-xs text-slate-500 mb-3">
+        <p className="text-[11px] sm:text-xs text-slate-500 mb-2 truncate">
           {format(selectedDay, "d MMMM yyyy, EEEE", { locale: tr })}
         </p>
 
-        <div className="space-y-2 max-h-[55vh] overflow-y-auto scroll-touch">
+        <div className="space-y-1.5 sm:space-y-2 max-h-[52vh] sm:max-h-[55vh] overflow-y-auto scroll-touch">
           {slots.map((slot) => (
             <div
               key={slot.startTime}
-              className="flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2.5"
+              className="flex items-center gap-1.5 sm:gap-2 rounded-xl border border-slate-100 bg-white p-2 sm:p-2.5 min-w-0"
             >
-              <div className="shrink-0 w-[4.5rem] text-center text-[10px] font-bold text-slate-600 bg-slate-50 rounded-lg py-2">
+              <div className="shrink-0 w-[3.5rem] sm:w-[4.5rem] text-center text-[9px] sm:text-[10px] font-bold text-slate-600 bg-slate-50 rounded-lg py-1.5 sm:py-2 leading-tight">
                 {formatSlotLabel(selectedDay, slot.startTime, openTime)}
               </div>
-              <div className="flex-1">{renderSlotButton(selectedDay, slot, true)}</div>
+              <div className="flex-1 min-w-0">{renderSlotButton(selectedDay, slot, true)}</div>
             </div>
           ))}
         </div>

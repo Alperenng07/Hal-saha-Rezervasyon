@@ -29,30 +29,30 @@ export default async function AdminDashboard() {
     ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 min-w-0">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Dashboard</h1>
         <p className="text-slate-500 mt-1">
           Hoş geldin, {settings?.name ?? "Yönetici"}.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
+        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200">
           <h3 className="text-slate-500 text-sm font-medium">Aktif Saha</h3>
-          <p className="text-3xl font-bold text-slate-800 mt-2">{pitches.length}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-slate-800 mt-2">{pitches.length}</p>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200">
           <h3 className="text-slate-500 text-sm font-medium">Bugünkü Rezervasyon</h3>
-          <p className="text-3xl font-bold text-slate-800 mt-2">{todayCount}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-slate-800 mt-2">{todayCount}</p>
         </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-200">
           <h3 className="text-slate-500 text-sm font-medium">Aktif Abonelik</h3>
-          <p className="text-3xl font-bold text-slate-800 mt-2">{subscriptionCount}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-slate-800 mt-2">{subscriptionCount}</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 min-w-0">
         <h2 className="text-xl font-bold text-slate-800 mb-4">Yaklaşan Rezervasyonlar</h2>
         {upcoming.length === 0 ? (
           <p className="text-slate-500 text-sm">Yaklaşan rezervasyon yok.</p>
