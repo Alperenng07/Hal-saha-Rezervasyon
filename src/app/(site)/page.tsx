@@ -2,11 +2,12 @@ import { getBusinessSettings, getPitches, getBookings, getActiveSubscriptions } 
 import WeeklyCalendar from "@/components/weekly-calendar";
 
 export default async function Home() {
-  const [settings, pitches, bookings, subscriptions] = await Promise.all([
+  const [settings, pitches, bookings, subscriptions, subscriptionExceptions] = await Promise.all([
     getBusinessSettings(),
     getPitches(),
     getBookings(),
     getActiveSubscriptions(),
+    getSubscriptionExceptions(),
   ]);
 
   const businessName = settings?.name ?? "Halı Saha Tesisleri";
@@ -51,6 +52,7 @@ export default async function Home() {
               pitches={pitches}
               initialBookings={bookings}
               subscriptions={subscriptions}
+              subscriptionExceptions={subscriptionExceptions}
             />
           </div>
         )}

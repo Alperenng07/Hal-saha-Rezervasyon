@@ -65,10 +65,10 @@ export default function PitchesManager({ initialPitches }: { initialPitches: Pit
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Sahalar & Saatler</h1>
-          <p className="text-slate-500 mt-1">Sahalarınızı ve çalışma saatlerini yönetin.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Sahalar & Saatler</h1>
+          <p className="text-slate-500 mt-1 text-sm">Sahalarınızı ve çalışma saatlerini yönetin.</p>
         </div>
         <button
           onClick={() => {
@@ -76,7 +76,7 @@ export default function PitchesManager({ initialPitches }: { initialPitches: Pit
             setError(null);
             setIsModalOpen(true);
           }}
-          className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+          className="flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-colors w-full sm:w-auto"
         >
           <Plus size={18} />
           Yeni Saha Ekle
@@ -84,7 +84,56 @@ export default function PitchesManager({ initialPitches }: { initialPitches: Pit
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm text-left">
+        <div className="md:hidden divide-y divide-slate-100">
+          {initialPitches.length === 0 ? (
+            <p className="py-8 px-4 text-center text-slate-500">Henüz saha eklenmemiş.</p>
+          ) : (
+            initialPitches.map((pitch) => (
+              <div key={pitch.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">{pitch.name}</p>
+                    <p className="text-sm text-slate-600">
+                      {pitch.openTime} – {pitch.closeTime}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {pitch.slotDurationMinutes} dk · Ofset {pitch.slotOffsetMinutes} dk
+                    </p>
+                  </div>
+                  <span
+                    className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${
+                      pitch.isActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-800"
+                    }`}
+                  >
+                    {pitch.isActive ? "Aktif" : "Pasif"}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setEditingPitch(pitch);
+                      setError(null);
+                      setIsModalOpen(true);
+                    }}
+                    className="flex-1 px-3 py-2.5 text-blue-700 bg-blue-50 rounded-lg text-sm font-semibold"
+                  >
+                    Düzenle
+                  </button>
+                  <button
+                    onClick={() => handleDelete(pitch.id)}
+                    disabled={isPending}
+                    className="flex-1 px-3 py-2.5 text-red-700 bg-red-50 rounded-lg text-sm font-semibold"
+                  >
+                    Sil
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="hidden md:block overflow-x-auto">
+        <table className="w-full text-sm text-left min-w-[640px]">
           <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
             <tr>
               <th className="py-4 px-6 font-medium">Saha Adı</th>
@@ -142,6 +191,7 @@ export default function PitchesManager({ initialPitches }: { initialPitches: Pit
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {isModalOpen && (

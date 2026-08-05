@@ -62,6 +62,7 @@ export async function createBooking(input: {
       isActive: true,
       startDate: { lte: bookingDate },
       OR: [{ endDate: null }, { endDate: { gte: bookingDate } }],
+      exceptions: { none: { date: bookingDate } },
     },
   });
   if (subscribed) {
@@ -158,6 +159,7 @@ export async function createBookingAdmin(input: {
       isActive: true,
       startDate: { lte: bookingDate },
       OR: [{ endDate: null }, { endDate: { gte: bookingDate } }],
+      exceptions: { none: { date: bookingDate } },
     },
   });
   if (subscribed) return { error: "Bu saat abonelik için ayrılmış." };
@@ -183,6 +185,7 @@ export async function createBookingAdmin(input: {
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/admin/bookings");
+  revalidatePath("/admin/calendar");
   return { success: true };
 }
 
@@ -205,5 +208,6 @@ export async function cancelBooking(bookingId: string): Promise<ActionResult> {
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/admin/bookings");
+  revalidatePath("/admin/calendar");
   return { success: true };
 }

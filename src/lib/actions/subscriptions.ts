@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { startOfDay } from "date-fns";
 
 type ActionResult = { success: true } | { error: string };
 
@@ -72,6 +73,53 @@ export async function createSubscription(input: {
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/admin/subscriptions");
+  revalidatePath("/admin/calendar");
+  return { success: true };
+}
+
+export async function skipSubscriptionOccurrence(input: {
+  subscriptionId: string;
+  date: string;
+}): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin) return { error: "Yetkisiz işlem." };
+
+  const subscription = await prisma.subscription.findUnique({
+    where: { id: input.subscriptionId },
+  });
+  if (!subscription || !subscription.isActive) {
+    return { error: "Abonelik bulunamadı." };
+  }
+
+  const occurrenceDate = startOfDay(new Date(input.date));
+
+  const existingBooking = await prisma.booking.findFirst({
+    where: {
+      pitchId: subscription.pitchId,
+      date: occurrenceDate,
+      startTime: subscription.startTime,
+      status: { in: ["CONFIRMED", "PENDING"] },
+    },
+  });
+  if (existingBooking) {
+    return { error: "Bu hafta için zaten rezervasyon var." };
+  }
+
+  try {
+    await prisma.subscriptionException.create({
+      data: {
+        subscriptionId: input.subscriptionId,
+        date: occurrenceDate,
+      },
+    });
+  } catch {
+    return { error: "Bu hafta zaten iptal edilmiş olabilir." };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/admin/subscriptions");
+  revalidatePath("/admin/calendar");
   return { success: true };
 }
 
@@ -90,5 +138,6 @@ export async function deactivateSubscription(id: string): Promise<ActionResult> 
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/admin/subscriptions");
+  revalidatePath("/admin/calendar");
   return { success: true };
 }

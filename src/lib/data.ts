@@ -73,6 +73,12 @@ export async function getAdminBookings() {
   });
 }
 
+export async function getSubscriptionExceptions() {
+  return prisma.subscriptionException.findMany({
+    orderBy: { date: "asc" },
+  });
+}
+
 export async function getActiveSubscriptions() {
   return prisma.subscription.findMany({
     where: { isActive: true },

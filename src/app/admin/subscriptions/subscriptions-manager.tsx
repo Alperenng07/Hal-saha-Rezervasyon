@@ -130,7 +130,50 @@ export default function SubscriptionsManager({
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="md:hidden divide-y divide-slate-100">
+          {initialSubscriptions.length === 0 ? (
+            <p className="py-8 px-4 text-center text-slate-500">Henüz abonelik yok.</p>
+          ) : (
+            initialSubscriptions.map((sub) => (
+              <div key={sub.id} className="p-4 space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">
+                      {sub.guestName || sub.user?.name || sub.user?.email || "—"}
+                    </p>
+                    <p className="text-sm text-slate-600">{sub.pitch.name}</p>
+                  </div>
+                  <span
+                    className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${
+                      sub.isActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {sub.isActive ? "Aktif" : "Pasif"}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-600">
+                  {dayLabel(sub.dayOfWeek)} · {sub.startTime}–{sub.endTime}
+                </p>
+                <p className="text-xs text-slate-400">
+                  {new Date(sub.startDate).toLocaleDateString("tr-TR")}
+                  {sub.endDate ? ` → ${new Date(sub.endDate).toLocaleDateString("tr-TR")}` : ""}
+                </p>
+                {sub.isActive && (
+                  <button
+                    onClick={() => handleDeactivate(sub.id)}
+                    disabled={isPending}
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-amber-700 bg-amber-50 rounded-lg text-sm font-semibold"
+                  >
+                    <UserX size={16} />
+                    Tamamen Sonlandır
+                  </button>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left min-w-[720px]">
             <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
               <tr>

@@ -113,7 +113,47 @@ export default function BookingsManager({
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="md:hidden divide-y divide-slate-100">
+          {initialBookings.length === 0 ? (
+            <p className="py-8 px-4 text-center text-slate-500">Aktif rezervasyon yok.</p>
+          ) : (
+            initialBookings.map((booking) => (
+              <div key={booking.id} className="p-4 space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">{booking.pitch.name}</p>
+                    <p className="text-sm text-slate-600">
+                      {booking.guestName || booking.user?.name || booking.user?.email || "—"}
+                    </p>
+                    {(booking.guestPhone || booking.user?.phone) && (
+                      <p className="text-xs text-slate-400">{booking.guestPhone || booking.user?.phone}</p>
+                    )}
+                  </div>
+                  <span
+                    className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${
+                      booking.isManual ? "bg-blue-100 text-blue-800" : "bg-emerald-100 text-emerald-800"
+                    }`}
+                  >
+                    {booking.isManual ? "Manuel" : "Online"}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-600">
+                  {new Date(booking.date).toLocaleDateString("tr-TR")} · {booking.startTime}–{booking.endTime}
+                </p>
+                <button
+                  onClick={() => handleCancel(booking.id)}
+                  disabled={isPending}
+                  className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-red-600 bg-red-50 rounded-lg text-sm font-semibold"
+                >
+                  <XCircle size={16} />
+                  İptal Et
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left min-w-[640px]">
             <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
               <tr>

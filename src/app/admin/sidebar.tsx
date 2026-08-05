@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   CalendarDays,
   CalendarCheck,
+  CalendarRange,
   Users,
   Settings,
   LogOut,
@@ -32,10 +33,11 @@ export default function Sidebar({ adminName, adminEmail }: SidebarProps) {
 
   const navLinks = [
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/admin/calendar", icon: CalendarRange, label: "Takvim" },
     { href: "/admin/bookings", icon: CalendarCheck, label: "Rezervasyonlar" },
     { href: "/admin/subscriptions", icon: Users, label: "Abonelikler" },
-    { href: "/admin/pitches", icon: CalendarDays, label: "Sahalar & Saatler" },
-    { href: "/admin/settings", icon: Settings, label: "İşletme Ayarları" },
+    { href: "/admin/pitches", icon: CalendarDays, label: "Sahalar" },
+    { href: "/admin/settings", icon: Settings, label: "Ayarlar" },
   ];
 
   async function handleLogout() {
@@ -63,7 +65,7 @@ export default function Sidebar({ adminName, adminEmail }: SidebarProps) {
       )}
 
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-40 w-64 bg-slate-900 text-white flex flex-col transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+        className={`fixed md:static inset-y-0 left-0 z-40 w-64 bg-slate-900 text-white flex flex-col transition-transform duration-300 ease-in-out pb-20 md:pb-0 ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
         <div className="p-6 border-b border-slate-800">
           <h2 className="text-xl font-bold tracking-tight">Yönetim Paneli</h2>
@@ -125,6 +127,36 @@ export default function Sidebar({ adminName, adminEmail }: SidebarProps) {
           </button>
         </div>
       </aside>
+
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-200 safe-area-pb">
+        <div className="grid grid-cols-5 gap-1 px-1 py-1.5">
+          {[
+            { href: "/admin/calendar", icon: CalendarRange, label: "Takvim" },
+            { href: "/admin/bookings", icon: CalendarCheck, label: "Rezerv." },
+            { href: "/admin", icon: LayoutDashboard, label: "Panel" },
+            { href: "/admin/subscriptions", icon: Users, label: "Abone" },
+            { href: "/admin/settings", icon: Settings, label: "Ayarlar" },
+          ].map((link) => {
+            const Icon = link.icon;
+            const isActive =
+              link.href === "/admin"
+                ? pathname === "/admin"
+                : pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg text-[10px] font-semibold ${
+                  isActive ? "text-emerald-700 bg-emerald-50" : "text-slate-500"
+                }`}
+              >
+                <Icon size={18} />
+                <span>{link.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </>
   );
 }

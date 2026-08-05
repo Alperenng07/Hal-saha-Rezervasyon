@@ -10,11 +10,11 @@ import {
   parse,
   isBefore,
   startOfDay,
-  getDay,
 } from "date-fns";
 import { tr } from "date-fns/locale";
 import { createBooking } from "@/lib/actions/bookings";
 import { generateSlots, normalizeTime, getActualSlotDateTime, getCurrentBusinessDay, getBookingDate, isOvernightSlot, formatSlotLabel } from "@/lib/slots";
+import { findBlockingSubscription } from "@/lib/subscription-utils";
 
 type Pitch = {
   id: string;
@@ -35,18 +35,28 @@ type Booking = {
 };
 
 type Subscription = {
+  id: string;
   pitchId: string;
   dayOfWeek: number;
   startTime: string;
+  endTime: string;
   startDate: Date;
   endDate: Date | null;
   isActive: boolean;
+  guestName?: string | null;
+  guestPhone?: string | null;
+};
+
+type SubscriptionException = {
+  subscriptionId: string;
+  date: Date;
 };
 
 interface WeeklyCalendarProps {
   pitches: Pitch[];
   initialBookings: Booking[];
   subscriptions?: Subscription[];
+  subscriptionExceptions?: SubscriptionException[];
 }
 
 interface SelectedSlot {
@@ -60,6 +70,7 @@ export default function WeeklyCalendar({
   pitches,
   initialBookings,
   subscriptions = [],
+  subscriptionExceptions = [],
 }: WeeklyCalendarProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -117,15 +128,14 @@ export default function WeeklyCalendar({
 
   const isSlotSubscribed = (businessDay: Date, startTime: string) => {
     const bookingDate = getBookingDate(businessDay, startTime, openTime);
-    const day = startOfDay(bookingDate);
-    return subscriptions.some(
-      (s) =>
-        s.isActive &&
-        s.pitchId === selectedPitch &&
-        s.dayOfWeek === getDay(bookingDate) &&
-        normalizeTime(s.startTime) === startTime &&
-        !isBefore(day, startOfDay(new Date(s.startDate))) &&
-        (!s.endDate || !isBefore(startOfDay(new Date(s.endDate)), day))
+    return Boolean(
+      findBlockingSubscription(
+        subscriptions,
+        bookingDate,
+        selectedPitch,
+        startTime,
+        subscriptionExceptions
+      )
     );
   };
 
