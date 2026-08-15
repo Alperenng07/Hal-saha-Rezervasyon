@@ -1,32 +1,48 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireTenantAdmin } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { notifyOwnerNewBooking } from "@/lib/notifications";
 import { getActualSlotDateTime } from "@/lib/slots";
+import { getActiveTenantBySlug, tenantPaths } from "@/lib/tenant";
 import { isBefore, startOfDay } from "date-fns";
 
 type ActionResult = { success: true } | { error: string };
 
-export async function createBooking(input: {
-  pitchId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  guestName: string;
-  guestPhone: string;
-  notes?: string;
-}): Promise<ActionResult> {
+async function getPitchForTenant(pitchId: string, tenantId: string, activeOnly = false) {
+  return prisma.pitch.findFirst({
+    where: {
+      id: pitchId,
+      tenantId,
+      ...(activeOnly ? { isActive: true } : {}),
+    },
+    include: { tenant: true },
+  });
+}
+
+export async function createBooking(
+  tenantSlug: string,
+  input: {
+    pitchId: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    guestName: string;
+    guestPhone: string;
+    notes?: string;
+  }
+): Promise<ActionResult> {
+  const tenant = await getActiveTenantBySlug(tenantSlug);
+  if (!tenant) return { error: "İşletme bulunamadı." };
+
   const name = input.guestName.trim();
   const phone = input.guestPhone.trim();
 
   if (!name) return { error: "Ad soyad zorunludur." };
   if (!phone) return { error: "Telefon numarası zorunludur." };
 
-  const pitch = await prisma.pitch.findFirst({
-    where: { id: input.pitchId, isActive: true },
-  });
+  const pitch = await getPitchForTenant(input.pitchId, tenant.id, true);
   if (!pitch) {
     return { error: "Saha bulunamadı." };
   }
@@ -86,56 +102,58 @@ export async function createBooking(input: {
     return { error: "Rezervasyon oluşturulamadı. Saat dolu olabilir." };
   }
 
-  const settings = await prisma.businessSettings.findFirst();
-  if (settings) {
-    try {
-      await notifyOwnerNewBooking(
-        {
-          businessName: settings.name,
-          adminEmail: settings.adminEmail ?? settings.email,
-          phone: settings.phone,
-          notifyEmailOnBooking: settings.notifyEmailOnBooking,
-          notifyWhatsAppOnBooking: settings.notifyWhatsAppOnBooking,
-          whatsappApiKey: settings.whatsappApiKey,
-        },
-        {
-          pitchName: pitch.name,
-          date: bookingDate,
-          startTime: input.startTime,
-          endTime: input.endTime,
-          guestName: name,
-          guestPhone: phone,
-          notes: input.notes,
-        }
-      );
-    } catch (err) {
-      console.error("[createBooking] Bildirim hatası:", err);
-    }
+  try {
+    await notifyOwnerNewBooking(
+      {
+        businessName: tenant.name,
+        adminEmail: tenant.adminEmail ?? tenant.email,
+        phone: tenant.phone,
+        notifyEmailOnBooking: tenant.notifyEmailOnBooking,
+        notifyWhatsAppOnBooking: tenant.notifyWhatsAppOnBooking,
+        whatsappApiKey: tenant.whatsappApiKey,
+        tenantSlug,
+      },
+      {
+        pitchName: pitch.name,
+        date: bookingDate,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        guestName: name,
+        guestPhone: phone,
+        notes: input.notes,
+      }
+    );
+  } catch (err) {
+    console.error("[createBooking] Bildirim hatası:", err);
   }
 
-  revalidatePath("/");
-  revalidatePath("/admin");
+  const paths = tenantPaths(tenantSlug);
+  revalidatePath(paths.site);
+  revalidatePath(paths.admin);
   return { success: true };
 }
 
-export async function createBookingAdmin(input: {
-  pitchId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  guestName: string;
-  guestPhone: string;
-  notes?: string;
-}): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin) return { error: "Yetkisiz işlem." };
+export async function createBookingAdmin(
+  tenantSlug: string,
+  input: {
+    pitchId: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    guestName: string;
+    guestPhone: string;
+    notes?: string;
+  }
+): Promise<ActionResult> {
+  const ctx = await requireTenantAdmin(tenantSlug);
+  if (!ctx) return { error: "Yetkisiz işlem." };
 
   const name = input.guestName.trim();
   const phone = input.guestPhone.trim();
   if (!name) return { error: "Ad soyad zorunludur." };
   if (!phone) return { error: "Telefon numarası zorunludur." };
 
-  const pitch = await prisma.pitch.findUnique({ where: { id: input.pitchId } });
+  const pitch = await getPitchForTenant(input.pitchId, ctx.tenant.id);
   if (!pitch) return { error: "Saha bulunamadı." };
 
   const bookingDate = startOfDay(new Date(input.date));
@@ -182,20 +200,29 @@ export async function createBookingAdmin(input: {
     return { error: "Rezervasyon oluşturulamadı. Saat dolu olabilir." };
   }
 
-  revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/admin/bookings");
-  revalidatePath("/admin/calendar");
+  const paths = tenantPaths(tenantSlug);
+  revalidatePath(paths.site);
+  revalidatePath(paths.admin);
+  revalidatePath(paths.bookings);
+  revalidatePath(paths.calendar);
   return { success: true };
 }
 
-export async function cancelBooking(bookingId: string): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin) {
+export async function cancelBooking(
+  tenantSlug: string,
+  bookingId: string
+): Promise<ActionResult> {
+  const ctx = await requireTenantAdmin(tenantSlug);
+  if (!ctx) {
     return { error: "Yetkisiz işlem." };
   }
 
-  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  const booking = await prisma.booking.findFirst({
+    where: {
+      id: bookingId,
+      pitch: { tenantId: ctx.tenant.id },
+    },
+  });
   if (!booking) {
     return { error: "Rezervasyon bulunamadı." };
   }
@@ -205,9 +232,10 @@ export async function cancelBooking(bookingId: string): Promise<ActionResult> {
     data: { status: "CANCELLED" },
   });
 
-  revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/admin/bookings");
-  revalidatePath("/admin/calendar");
+  const paths = tenantPaths(tenantSlug);
+  revalidatePath(paths.site);
+  revalidatePath(paths.admin);
+  revalidatePath(paths.bookings);
+  revalidatePath(paths.calendar);
   return { success: true };
 }

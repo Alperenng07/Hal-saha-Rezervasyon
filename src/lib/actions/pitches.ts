@@ -1,30 +1,37 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireTenantAdmin } from "@/lib/auth";
+import { tenantPaths } from "@/lib/tenant";
 import { revalidatePath } from "next/cache";
 
 type ActionResult = { success: true } | { error: string };
 
-export async function getAllPitchesAdmin() {
-  const admin = await requireAdmin();
-  if (!admin) return [];
+export async function getAllPitchesAdmin(tenantSlug: string) {
+  const ctx = await requireTenantAdmin(tenantSlug);
+  if (!ctx) return [];
 
-  return prisma.pitch.findMany({ orderBy: { createdAt: "asc" } });
+  return prisma.pitch.findMany({
+    where: { tenantId: ctx.tenant.id },
+    orderBy: { createdAt: "asc" },
+  });
 }
 
-export async function savePitch(input: {
-  id?: string;
-  name: string;
-  description?: string;
-  openTime: string;
-  closeTime: string;
-  slotDurationMinutes: number;
-  slotOffsetMinutes: number;
-  isActive?: boolean;
-}): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin) return { error: "Yetkisiz işlem." };
+export async function savePitch(
+  tenantSlug: string,
+  input: {
+    id?: string;
+    name: string;
+    description?: string;
+    openTime: string;
+    closeTime: string;
+    slotDurationMinutes: number;
+    slotOffsetMinutes: number;
+    isActive?: boolean;
+  }
+): Promise<ActionResult> {
+  const ctx = await requireTenantAdmin(tenantSlug);
+  if (!ctx) return { error: "Yetkisiz işlem." };
 
   const data = {
     name: input.name.trim(),
@@ -37,20 +44,32 @@ export async function savePitch(input: {
   };
 
   if (input.id) {
+    const existing = await prisma.pitch.findFirst({
+      where: { id: input.id, tenantId: ctx.tenant.id },
+    });
+    if (!existing) return { error: "Saha bulunamadı." };
     await prisma.pitch.update({ where: { id: input.id }, data });
   } else {
-    await prisma.pitch.create({ data });
+    await prisma.pitch.create({
+      data: { ...data, tenantId: ctx.tenant.id },
+    });
   }
 
-  revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/admin/pitches");
+  const paths = tenantPaths(tenantSlug);
+  revalidatePath(paths.site);
+  revalidatePath(paths.admin);
+  revalidatePath(paths.pitches);
   return { success: true };
 }
 
-export async function deletePitch(id: string): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin) return { error: "Yetkisiz işlem." };
+export async function deletePitch(tenantSlug: string, id: string): Promise<ActionResult> {
+  const ctx = await requireTenantAdmin(tenantSlug);
+  if (!ctx) return { error: "Yetkisiz işlem." };
+
+  const pitch = await prisma.pitch.findFirst({
+    where: { id, tenantId: ctx.tenant.id },
+  });
+  if (!pitch) return { error: "Saha bulunamadı." };
 
   const activeBookings = await prisma.booking.count({
     where: {
@@ -66,19 +85,30 @@ export async function deletePitch(id: string): Promise<ActionResult> {
 
   await prisma.pitch.delete({ where: { id } });
 
-  revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/admin/pitches");
+  const paths = tenantPaths(tenantSlug);
+  revalidatePath(paths.site);
+  revalidatePath(paths.admin);
+  revalidatePath(paths.pitches);
   return { success: true };
 }
 
-export async function togglePitchActive(id: string, isActive: boolean): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin) return { error: "Yetkisiz işlem." };
+export async function togglePitchActive(
+  tenantSlug: string,
+  id: string,
+  isActive: boolean
+): Promise<ActionResult> {
+  const ctx = await requireTenantAdmin(tenantSlug);
+  if (!ctx) return { error: "Yetkisiz işlem." };
+
+  const pitch = await prisma.pitch.findFirst({
+    where: { id, tenantId: ctx.tenant.id },
+  });
+  if (!pitch) return { error: "Saha bulunamadı." };
 
   await prisma.pitch.update({ where: { id }, data: { isActive } });
 
-  revalidatePath("/");
-  revalidatePath("/admin/pitches");
+  const paths = tenantPaths(tenantSlug);
+  revalidatePath(paths.site);
+  revalidatePath(paths.pitches);
   return { success: true };
 }

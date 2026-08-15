@@ -1,13 +1,30 @@
 import { NextResponse } from "next/server";
-import { getSessionUser, resolveIsAdmin, syncUserFromSession } from "@/lib/auth";
+import {
+  getSessionUser,
+  resolveIsSuperAdmin,
+  resolveIsTenantAdmin,
+  syncUserFromSession,
+} from "@/lib/auth";
+import { getActiveTenantBySlug } from "@/lib/tenant";
 
-export async function GET() {
+export async function GET(request: Request) {
   const sessionUser = await getSessionUser();
   if (!sessionUser?.email) {
     return NextResponse.json({ isAdmin: false });
   }
 
   await syncUserFromSession();
-  const isAdmin = await resolveIsAdmin(sessionUser.email);
+
+  const { searchParams } = new URL(request.url);
+  const tenantSlug = searchParams.get("tenant");
+
+  if (tenantSlug) {
+    const tenant = await getActiveTenantBySlug(tenantSlug);
+    if (!tenant) return NextResponse.json({ isAdmin: false });
+    const isAdmin = await resolveIsTenantAdmin(sessionUser.email, tenant);
+    return NextResponse.json({ isAdmin });
+  }
+
+  const isAdmin = await resolveIsSuperAdmin(sessionUser.email);
   return NextResponse.json({ isAdmin });
 }

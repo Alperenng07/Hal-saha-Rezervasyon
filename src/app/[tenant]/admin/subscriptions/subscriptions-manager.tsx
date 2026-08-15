@@ -2,9 +2,19 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, XCircle } from "lucide-react";
-import { createBookingAdmin, cancelBooking } from "@/lib/actions/bookings";
+import { Plus, UserX } from "lucide-react";
+import { createSubscription, deactivateSubscription } from "@/lib/actions/subscriptions";
 import { generateSlots } from "@/lib/slots";
+
+const WEEKDAYS = [
+  { value: 1, label: "Pazartesi" },
+  { value: 2, label: "Salı" },
+  { value: 3, label: "Çarşamba" },
+  { value: 4, label: "Perşembe" },
+  { value: 5, label: "Cuma" },
+  { value: 6, label: "Cumartesi" },
+  { value: 0, label: "Pazar" },
+];
 
 type Pitch = {
   id: string;
@@ -15,26 +25,33 @@ type Pitch = {
   slotOffsetMinutes: number;
 };
 
-type Booking = {
+type Subscription = {
   id: string;
   pitchId: string;
   guestName: string | null;
   guestPhone: string | null;
-  date: string;
+  dayOfWeek: number;
   startTime: string;
   endTime: string;
-  status: string;
-  isManual: boolean;
+  startDate: string;
+  endDate: string | null;
+  isActive: boolean;
   notes: string | null;
   pitch: { name: string };
   user: { name: string | null; email: string; phone: string | null } | null;
 };
 
-export default function BookingsManager({
-  initialBookings,
+function dayLabel(dayOfWeek: number) {
+  return WEEKDAYS.find((d) => d.value === dayOfWeek)?.label ?? "—";
+}
+
+export default function SubscriptionsManager({
+  tenantSlug,
+  initialSubscriptions,
   pitches,
 }: {
-  initialBookings: Booking[];
+  tenantSlug: string;
+  initialSubscriptions: Subscription[];
   pitches: Pitch[];
 }) {
   const router = useRouter();
@@ -57,11 +74,13 @@ export default function BookingsManager({
     const [startTime, endTime] = slotValue.split("|");
 
     startTransition(async () => {
-      const result = await createBookingAdmin({
+      const result = await createSubscription(tenantSlug, {
         pitchId: form.get("pitchId") as string,
-        date: form.get("date") as string,
+        dayOfWeek: Number(form.get("dayOfWeek")),
         startTime,
         endTime,
+        startDate: form.get("startDate") as string,
+        endDate: (form.get("endDate") as string) || undefined,
         guestName: form.get("guestName") as string,
         guestPhone: form.get("guestPhone") as string,
         notes: (form.get("notes") as string) || undefined,
@@ -77,11 +96,11 @@ export default function BookingsManager({
     });
   };
 
-  const handleCancel = (id: string) => {
-    if (!confirm("Bu rezervasyonu iptal etmek istediğinize emin misiniz?")) return;
+  const handleDeactivate = (id: string) => {
+    if (!confirm("Bu aboneliği sonlandırmak istediğinize emin misiniz?")) return;
 
     startTransition(async () => {
-      const result = await cancelBooking(id);
+      const result = await deactivateSubscription(tenantSlug, id);
       if ("error" in result) {
         alert(result.error);
         return;
@@ -94,9 +113,9 @@ export default function BookingsManager({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Rezervasyonlar</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Abonelikler</h1>
           <p className="text-slate-500 mt-1 text-sm">
-            Manuel rezervasyon oluşturun veya mevcut rezervasyonları iptal edin.
+            Düzenli aboneleri tanımlayın; ilgili saatler takvimde otomatik kapanır.
           </p>
         </div>
         <button
@@ -108,116 +127,124 @@ export default function BookingsManager({
           className="flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50"
         >
           <Plus size={18} />
-          Rezervasyon Ekle
+          Abone Ekle
         </button>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="md:hidden divide-y divide-slate-100">
-          {initialBookings.length === 0 ? (
-            <p className="py-8 px-4 text-center text-slate-500">Aktif rezervasyon yok.</p>
+          {initialSubscriptions.length === 0 ? (
+            <p className="py-8 px-4 text-center text-slate-500">Henüz abonelik yok.</p>
           ) : (
-            initialBookings.map((booking) => (
-              <div key={booking.id} className="p-4 space-y-2">
+            initialSubscriptions.map((sub) => (
+              <div key={sub.id} className="p-4 space-y-2">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-slate-900">{booking.pitch.name}</p>
-                    <p className="text-sm text-slate-600">
-                      {booking.guestName || booking.user?.name || booking.user?.email || "—"}
+                    <p className="font-semibold text-slate-900">
+                      {sub.guestName || sub.user?.name || sub.user?.email || "—"}
                     </p>
-                    {(booking.guestPhone || booking.user?.phone) && (
-                      <p className="text-xs text-slate-400">{booking.guestPhone || booking.user?.phone}</p>
-                    )}
+                    <p className="text-sm text-slate-600">{sub.pitch.name}</p>
                   </div>
                   <span
                     className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${
-                      booking.isManual ? "bg-blue-100 text-blue-800" : "bg-emerald-100 text-emerald-800"
+                      sub.isActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"
                     }`}
                   >
-                    {booking.isManual ? "Manuel" : "Online"}
+                    {sub.isActive ? "Aktif" : "Pasif"}
                   </span>
                 </div>
                 <p className="text-sm text-slate-600">
-                  {new Date(booking.date).toLocaleDateString("tr-TR")} · {booking.startTime}–{booking.endTime}
+                  {dayLabel(sub.dayOfWeek)} · {sub.startTime}–{sub.endTime}
                 </p>
-                <button
-                  onClick={() => handleCancel(booking.id)}
-                  disabled={isPending}
-                  className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-red-600 bg-red-50 rounded-lg text-sm font-semibold"
-                >
-                  <XCircle size={16} />
-                  İptal Et
-                </button>
+                <p className="text-xs text-slate-400">
+                  {new Date(sub.startDate).toLocaleDateString("tr-TR")}
+                  {sub.endDate ? ` → ${new Date(sub.endDate).toLocaleDateString("tr-TR")}` : ""}
+                </p>
+                {sub.isActive && (
+                  <button
+                    onClick={() => handleDeactivate(sub.id)}
+                    disabled={isPending}
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-amber-700 bg-amber-50 rounded-lg text-sm font-semibold"
+                  >
+                    <UserX size={16} />
+                    Tamamen Sonlandır
+                  </button>
+                )}
               </div>
             ))
           )}
         </div>
 
         <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-sm text-left min-w-[640px]">
+          <table className="w-full text-sm text-left min-w-[720px]">
             <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
               <tr>
+                <th className="py-3 px-4 font-medium">Abone</th>
                 <th className="py-3 px-4 font-medium">Saha</th>
-                <th className="py-3 px-4 font-medium">Müşteri</th>
-                <th className="py-3 px-4 font-medium">Tarih</th>
-                <th className="py-3 px-4 font-medium">Saat</th>
-                <th className="py-3 px-4 font-medium">Tür</th>
+                <th className="py-3 px-4 font-medium">Gün / Saat</th>
+                <th className="py-3 px-4 font-medium">Dönem</th>
+                <th className="py-3 px-4 font-medium">Durum</th>
                 <th className="py-3 px-4 font-medium text-right">İşlem</th>
               </tr>
             </thead>
             <tbody>
-              {initialBookings.length === 0 ? (
+              {initialSubscriptions.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-8 px-4 text-center text-slate-500">
-                    Aktif rezervasyon yok.
+                    Henüz abonelik yok.
                   </td>
                 </tr>
               ) : (
-                initialBookings.map((booking) => (
+                initialSubscriptions.map((sub) => (
                   <tr
-                    key={booking.id}
+                    key={sub.id}
                     className="border-b border-slate-100 last:border-0 hover:bg-slate-50"
                   >
-                    <td className="py-3 px-4 font-medium text-slate-800">
-                      {booking.pitch.name}
-                    </td>
-                    <td className="py-3 px-4 text-slate-600">
-                      {booking.guestName ||
-                        booking.user?.name ||
-                        booking.user?.email ||
-                        "—"}
-                      {(booking.guestPhone || booking.user?.phone) && (
+                    <td className="py-3 px-4 text-slate-700">
+                      {sub.guestName || sub.user?.name || sub.user?.email || "—"}
+                      {(sub.guestPhone || sub.user?.phone) && (
                         <span className="block text-xs text-slate-400">
-                          {booking.guestPhone || booking.user?.phone}
+                          {sub.guestPhone || sub.user?.phone}
                         </span>
                       )}
                     </td>
+                    <td className="py-3 px-4 font-medium text-slate-800">{sub.pitch.name}</td>
                     <td className="py-3 px-4 text-slate-600">
-                      {new Date(booking.date).toLocaleDateString("tr-TR")}
+                      {dayLabel(sub.dayOfWeek)}
+                      <span className="block text-xs text-slate-400">
+                        {sub.startTime} - {sub.endTime}
+                      </span>
                     </td>
                     <td className="py-3 px-4 text-slate-600">
-                      {booking.startTime} - {booking.endTime}
+                      {new Date(sub.startDate).toLocaleDateString("tr-TR")}
+                      {sub.endDate && (
+                        <span className="block text-xs text-slate-400">
+                          → {new Date(sub.endDate).toLocaleDateString("tr-TR")}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 px-4">
                       <span
                         className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                          booking.isManual
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-emerald-100 text-emerald-800"
+                          sub.isActive
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-slate-100 text-slate-600"
                         }`}
                       >
-                        {booking.isManual ? "Manuel" : "Online"}
+                        {sub.isActive ? "Aktif" : "Pasif"}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => handleCancel(booking.id)}
-                        disabled={isPending}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg text-xs font-semibold transition-colors"
-                      >
-                        <XCircle size={14} />
-                        İptal
-                      </button>
+                      {sub.isActive && (
+                        <button
+                          onClick={() => handleDeactivate(sub.id)}
+                          disabled={isPending}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-amber-700 hover:bg-amber-50 rounded-lg text-xs font-semibold transition-colors"
+                        >
+                          <UserX size={14} />
+                          Sonlandır
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -229,9 +256,9 @@ export default function BookingsManager({
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="p-5 border-b border-slate-100 bg-slate-50">
-              <h3 className="text-lg font-bold text-slate-800">Yeni Rezervasyon</h3>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90dvh] overflow-y-auto">
+            <div className="p-5 border-b border-slate-100 bg-slate-50 sticky top-0">
+              <h3 className="text-lg font-bold text-slate-800">Yeni Abonelik</h3>
             </div>
 
             <form onSubmit={handleCreate} className="p-5 space-y-4">
@@ -253,14 +280,18 @@ export default function BookingsManager({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Tarih</label>
-                <input
-                  name="date"
-                  type="date"
+                <label className="block text-sm font-medium text-slate-700 mb-1">Gün</label>
+                <select
+                  name="dayOfWeek"
                   required
-                  defaultValue={new Date().toISOString().slice(0, 10)}
                   className="w-full border border-slate-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
+                >
+                  {WEEKDAYS.map((day) => (
+                    <option key={day.value} value={day.value}>
+                      {day.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -276,6 +307,29 @@ export default function BookingsManager({
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Başlangıç</label>
+                  <input
+                    name="startDate"
+                    type="date"
+                    required
+                    defaultValue={new Date().toISOString().slice(0, 10)}
+                    className="w-full border border-slate-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Bitiş (ops.)
+                  </label>
+                  <input
+                    name="endDate"
+                    type="date"
+                    className="w-full border border-slate-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
               </div>
 
               <div>

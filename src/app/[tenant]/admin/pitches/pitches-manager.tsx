@@ -16,7 +16,13 @@ type Pitch = {
   isActive: boolean;
 };
 
-export default function PitchesManager({ initialPitches }: { initialPitches: Pitch[] }) {
+export default function PitchesManager({
+  tenantSlug,
+  initialPitches,
+}: {
+  tenantSlug: string;
+  initialPitches: Pitch[];
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,7 +35,7 @@ export default function PitchesManager({ initialPitches }: { initialPitches: Pit
     const form = new FormData(e.currentTarget);
 
     startTransition(async () => {
-      const result = await savePitch({
+      const result = await savePitch(tenantSlug, {
         id: editingPitch?.id,
         name: form.get("name") as string,
         description: (form.get("description") as string) || undefined,
@@ -54,7 +60,7 @@ export default function PitchesManager({ initialPitches }: { initialPitches: Pit
     if (!confirm("Bu sahayı silmek istediğinize emin misiniz?")) return;
 
     startTransition(async () => {
-      const result = await deletePitch(id);
+      const result = await deletePitch(tenantSlug, id);
       if ("error" in result) {
         alert(result.error);
         return;

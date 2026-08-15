@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Check } from "lucide-react";
-import { updateBusinessSettings } from "@/lib/actions/settings";
+import { updateTenantSettings } from "@/lib/actions/settings";
 import { THEME_OPTIONS, type ThemeId } from "@/lib/themes";
 
 type Settings = {
@@ -19,7 +19,13 @@ type Settings = {
   whatsappApiKey: string | null;
 };
 
-export default function SettingsForm({ settings }: { settings: Settings | null }) {
+export default function SettingsForm({
+  tenantSlug,
+  settings,
+}: {
+  tenantSlug: string;
+  settings: Settings | null;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedTheme, setSelectedTheme] = useState<ThemeId>(
@@ -31,7 +37,7 @@ export default function SettingsForm({ settings }: { settings: Settings | null }
     const form = new FormData(e.currentTarget);
 
     startTransition(async () => {
-      const result = await updateBusinessSettings({
+      const result = await updateTenantSettings(tenantSlug, {
         name: form.get("name") as string,
         siteTitle: form.get("siteTitle") as string,
         logoUrl: (form.get("logoUrl") as string) || undefined,

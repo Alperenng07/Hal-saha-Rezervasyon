@@ -1,7 +1,5 @@
-import { getAdminEmailFromSettings } from "@/lib/auth";
-import RegisterForm from "./register-form";
+import { redirect } from "next/navigation";
 
-export default async function RegisterPage() {
-  const adminEmail = await getAdminEmailFromSettings();
-  return <RegisterForm adminEmail={adminEmail} />;
+export default function LegacyRegisterRedirect() {
+  redirect("/demo/login");
 }

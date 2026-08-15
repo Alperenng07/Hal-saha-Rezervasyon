@@ -18,6 +18,7 @@ export type NotificationSettings = {
   notifyEmailOnBooking: boolean;
   notifyWhatsAppOnBooking: boolean;
   whatsappApiKey: string | null;
+  tenantSlug?: string;
 };
 
 export function getSiteUrl(): string {
@@ -32,10 +33,13 @@ export function getSiteUrl(): string {
 
 export function buildBookingNotificationMessage(
   details: BookingNotificationDetails,
-  businessName: string
+  businessName: string,
+  tenantSlug?: string
 ): { text: string; html: string } {
   const siteUrl = getSiteUrl();
-  const adminUrl = `${siteUrl}/admin/bookings`;
+  const adminUrl = tenantSlug
+    ? `${siteUrl}/${tenantSlug}/admin/bookings`
+    : `${siteUrl}/admin/bookings`;
   const dateStr = format(details.date, "d MMMM yyyy, EEEE", { locale: tr });
 
   const lines = [
@@ -147,7 +151,11 @@ export async function notifyOwnerNewBooking(
   settings: NotificationSettings,
   details: BookingNotificationDetails
 ) {
-  const { text, html } = buildBookingNotificationMessage(details, settings.businessName);
+  const { text, html } = buildBookingNotificationMessage(
+    details,
+    settings.businessName,
+    settings.tenantSlug
+  );
   const subject = `Yeni rezervasyon: ${details.pitchName} – ${format(details.date, "d MMM", { locale: tr })} ${details.startTime}`;
 
   const tasks: Promise<void>[] = [];

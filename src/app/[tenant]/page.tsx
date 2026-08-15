@@ -1,22 +1,28 @@
+import { notFound } from "next/navigation";
 import {
-  getBusinessSettings,
+  getTenantSettings,
   getPitches,
-  getBookings,
-  getActiveSubscriptions,
-  getSubscriptionExceptions,
+  getBookingsForTenant,
+  getActiveSubscriptionsForTenant,
+  getSubscriptionExceptionsForTenant,
 } from "@/lib/data";
 import WeeklyCalendar from "@/components/weekly-calendar";
 
-export default async function Home() {
-  const [settings, pitches, bookings, subscriptions, subscriptionExceptions] = await Promise.all([
-    getBusinessSettings(),
-    getPitches(),
-    getBookings(),
-    getActiveSubscriptions(),
-    getSubscriptionExceptions(),
-  ]);
+type Props = {
+  params: Promise<{ tenant: string }>;
+};
 
-  const businessName = settings?.name ?? "Halı Saha Tesisleri";
+export default async function TenantHomePage({ params }: Props) {
+  const { tenant: tenantSlug } = await params;
+  const settings = await getTenantSettings(tenantSlug);
+  if (!settings) notFound();
+
+  const [pitches, bookings, subscriptions, subscriptionExceptions] = await Promise.all([
+    getPitches(settings.id),
+    getBookingsForTenant(settings.id),
+    getActiveSubscriptionsForTenant(settings.id),
+    getSubscriptionExceptionsForTenant(settings.id),
+  ]);
 
   return (
     <div className="relative bg-slate-50">
@@ -41,7 +47,7 @@ export default async function Home() {
             </span>
           </h1>
           <p className="text-sm sm:text-lg md:text-xl text-slate-500/90 leading-relaxed max-w-2xl mx-auto px-1 sm:px-2">
-            <strong className="text-slate-700 font-semibold">{businessName}</strong>{" "}
+            <strong className="text-slate-700 font-semibold">{settings.name}</strong>{" "}
             sahaları için uygun saatleri aşağıdan gerçek zamanlı inceleyin ve
             saniyeler içinde rezervasyonunuzu tamamlayın.
           </p>
@@ -55,6 +61,7 @@ export default async function Home() {
           <div className="relative max-w-6xl mx-auto rounded-2xl sm:rounded-3xl p-0.5 sm:p-1 bg-gradient-to-b from-slate-200/50 to-transparent shadow-xl sm:shadow-2xl shadow-slate-200/50">
             <div className="absolute -inset-1 bg-brand-gradient rounded-3xl blur opacity-20 pointer-events-none" />
             <WeeklyCalendar
+              tenantSlug={tenantSlug}
               pitches={pitches}
               initialBookings={bookings}
               subscriptions={subscriptions}

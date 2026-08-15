@@ -1,39 +1,32 @@
+import { notFound } from "next/navigation";
 import {
-  getBusinessSettings,
+  getTenantSettings,
   getPitches,
   getTodayBookingsCount,
   getActiveSubscriptionsCount,
   getUpcomingBookings,
 } from "@/lib/data";
 
-const statusLabels: Record<string, string> = {
-  CONFIRMED: "Onaylı",
-  PENDING: "Beklemede",
-  CANCELLED: "İptal",
-};
+type Props = { params: Promise<{ tenant: string }> };
 
-const statusColors: Record<string, string> = {
-  CONFIRMED: "bg-emerald-100 text-emerald-800",
-  PENDING: "bg-amber-100 text-amber-800",
-  CANCELLED: "bg-slate-100 text-slate-800",
-};
+export default async function AdminDashboard({ params }: Props) {
+  const { tenant: tenantSlug } = await params;
+  const settings = await getTenantSettings(tenantSlug);
+  if (!settings) notFound();
 
-export default async function AdminDashboard() {
-  const [pitches, todayCount, subscriptionCount, upcoming, settings] =
-    await Promise.all([
-      getPitches(),
-      getTodayBookingsCount(),
-      getActiveSubscriptionsCount(),
-      getUpcomingBookings(10),
-      getBusinessSettings(),
-    ]);
+  const [pitches, todayCount, subscriptionCount, upcoming] = await Promise.all([
+    getPitches(settings.id),
+    getTodayBookingsCount(settings.id),
+    getActiveSubscriptionsCount(settings.id),
+    getUpcomingBookings(settings.id, 10),
+  ]);
 
   return (
     <div className="space-y-4 sm:space-y-6 min-w-0">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Dashboard</h1>
         <p className="text-slate-500 mt-1">
-          Hoş geldin, {settings?.name ?? "Yönetici"}.
+          Hoş geldin, {settings.name}.
         </p>
       </div>
 
@@ -79,9 +72,6 @@ export default async function AdminDashboard() {
                         booking.user?.name ||
                         booking.user?.email ||
                         "Misafir"}
-                      {booking.guestPhone && (
-                        <span className="block text-xs text-slate-400">{booking.guestPhone}</span>
-                      )}
                     </td>
                     <td className="py-3 px-4 text-slate-600">
                       {booking.date.toLocaleDateString("tr-TR")}
@@ -90,10 +80,8 @@ export default async function AdminDashboard() {
                       {booking.startTime} - {booking.endTime}
                     </td>
                     <td className="py-3 px-4">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[booking.status] ?? statusColors.CANCELLED}`}
-                      >
-                        {statusLabels[booking.status] ?? booking.status}
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                        Onaylı
                       </span>
                     </td>
                   </tr>

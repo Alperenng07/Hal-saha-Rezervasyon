@@ -17,34 +17,37 @@ import {
 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { syncUserAction } from "@/lib/actions/auth";
+import { tenantPaths } from "@/lib/tenant-paths";
 
 type SidebarProps = {
+  tenantSlug: string;
   adminName: string | null;
   adminEmail: string;
 };
 
-export default function Sidebar({ adminName, adminEmail }: SidebarProps) {
+export default function Sidebar({ tenantSlug, adminName, adminEmail }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const paths = tenantPaths(tenantSlug);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
   const closeSidebar = () => setIsOpen(false);
 
   const navLinks = [
-    { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/admin/calendar", icon: CalendarRange, label: "Takvim" },
-    { href: "/admin/bookings", icon: CalendarCheck, label: "Rezervasyonlar" },
-    { href: "/admin/subscriptions", icon: Users, label: "Abonelikler" },
-    { href: "/admin/pitches", icon: CalendarDays, label: "Sahalar" },
-    { href: "/admin/settings", icon: Settings, label: "Ayarlar" },
+    { href: paths.admin, icon: LayoutDashboard, label: "Dashboard" },
+    { href: paths.calendar, icon: CalendarRange, label: "Takvim" },
+    { href: paths.bookings, icon: CalendarCheck, label: "Rezervasyonlar" },
+    { href: paths.subscriptions, icon: Users, label: "Abonelikler" },
+    { href: paths.pitches, icon: CalendarDays, label: "Sahalar" },
+    { href: paths.settings, icon: Settings, label: "Ayarlar" },
   ];
 
   async function handleLogout() {
     const supabase = createSupabaseBrowserClient();
     await supabase.auth.signOut();
     await syncUserAction();
-    router.push("/");
+    router.push(paths.site);
     router.refresh();
   }
 
@@ -69,7 +72,7 @@ export default function Sidebar({ adminName, adminEmail }: SidebarProps) {
       >
         <div className="p-6 border-b border-slate-800">
           <h2 className="text-xl font-bold tracking-tight">Yönetim Paneli</h2>
-          <p className="text-sm text-slate-400 mt-1">Saha & Rezervasyon</p>
+          <p className="text-sm text-slate-400 mt-1">/{tenantSlug}</p>
         </div>
 
         <div className="px-4 py-4 border-b border-slate-800">
@@ -90,8 +93,8 @@ export default function Sidebar({ adminName, adminEmail }: SidebarProps) {
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive =
-              link.href === "/admin"
-                ? pathname === "/admin"
+              link.href === paths.admin
+                ? pathname === paths.admin
                 : pathname.startsWith(link.href);
             return (
               <Link
@@ -113,7 +116,7 @@ export default function Sidebar({ adminName, adminEmail }: SidebarProps) {
 
         <div className="p-4 border-t border-slate-800 space-y-2">
           <Link
-            href="/"
+            href={paths.site}
             className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition-colors"
           >
             <span className="font-medium">Siteye Dön</span>
@@ -131,16 +134,16 @@ export default function Sidebar({ adminName, adminEmail }: SidebarProps) {
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-200 safe-area-pb">
         <div className="grid grid-cols-5 gap-0.5 px-0.5 py-1">
           {[
-            { href: "/admin/calendar", icon: CalendarRange, label: "Takvim" },
-            { href: "/admin/bookings", icon: CalendarCheck, label: "Rezerv." },
-            { href: "/admin", icon: LayoutDashboard, label: "Panel" },
-            { href: "/admin/subscriptions", icon: Users, label: "Abone" },
-            { href: "/admin/settings", icon: Settings, label: "Ayarlar" },
+            { href: paths.calendar, icon: CalendarRange, label: "Takvim" },
+            { href: paths.bookings, icon: CalendarCheck, label: "Rezerv." },
+            { href: paths.admin, icon: LayoutDashboard, label: "Panel" },
+            { href: paths.subscriptions, icon: Users, label: "Abone" },
+            { href: paths.settings, icon: Settings, label: "Ayarlar" },
           ].map((link) => {
             const Icon = link.icon;
             const isActive =
-              link.href === "/admin"
-                ? pathname === "/admin"
+              link.href === paths.admin
+                ? pathname === paths.admin
                 : pathname.startsWith(link.href);
             return (
               <Link

@@ -9,6 +9,7 @@ datasource db {
 enum Role {
   USER
   ADMIN
+  SUPER_ADMIN
 }
 
 enum BookingStatus {
@@ -30,24 +31,29 @@ model User {
   updatedAt     DateTime       @updatedAt
 }
 
-model BusinessSettings {
-  id         String   @id @default(uuid())
-  name       String
-  logoUrl    String?
-  siteTitle  String
-  phone      String?
-  email      String?
+model Tenant {
+  id                      String   @id @default(uuid())
+  slug                    String   @unique
+  name                    String
+  logoUrl                 String?
+  siteTitle               String
+  phone                   String?
+  email                   String?
   adminEmail              String?
   themeColor              String   @default("emerald")
   notifyEmailOnBooking    Boolean  @default(true)
   notifyWhatsAppOnBooking Boolean  @default(false)
   whatsappApiKey          String?
+  isActive                Boolean  @default(true)
+  pitches                 Pitch[]
   createdAt               DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  updatedAt               DateTime @updatedAt
 }
 
 model Pitch {
   id                  String         @id @default(uuid())
+  tenantId            String
+  tenant              Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name                String
   description         String?
   openTime            String

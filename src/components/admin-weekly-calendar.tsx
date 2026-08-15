@@ -77,11 +77,13 @@ type SlotContext = {
 type ModalMode = "add-booking" | "cancel-booking" | "cancel-subscription" | null;
 
 export default function AdminWeeklyCalendar({
+  tenantSlug,
   pitches,
   initialBookings,
   subscriptions,
   subscriptionExceptions,
 }: {
+  tenantSlug: string;
   pitches: Pitch[];
   initialBookings: Booking[];
   subscriptions: Subscription[];
@@ -272,7 +274,7 @@ export default function AdminWeeklyCalendar({
     }
 
     startTransition(async () => {
-      const result = await createBookingAdmin({
+      const result = await createBookingAdmin(tenantSlug, {
         pitchId: selectedPitch,
         date: format(slotContext.bookingDate, "yyyy-MM-dd"),
         startTime: slotContext.startTime,
@@ -310,7 +312,7 @@ export default function AdminWeeklyCalendar({
     if (!selectedBooking) return;
 
     startTransition(async () => {
-      const result = await cancelBooking(selectedBooking.id);
+      const result = await cancelBooking(tenantSlug, selectedBooking.id);
       if ("error" in result) {
         setError(result.error);
         return;
@@ -325,7 +327,7 @@ export default function AdminWeeklyCalendar({
     if (!selectedSubscription || !slotContext) return;
 
     startTransition(async () => {
-      const result = await skipSubscriptionOccurrence({
+      const result = await skipSubscriptionOccurrence(tenantSlug, {
         subscriptionId: selectedSubscription.id,
         date: format(slotContext.bookingDate, "yyyy-MM-dd"),
       });
@@ -349,7 +351,7 @@ export default function AdminWeeklyCalendar({
     if (!selectedSubscription) return;
 
     startTransition(async () => {
-      const result = await deactivateSubscription(selectedSubscription.id);
+      const result = await deactivateSubscription(tenantSlug, selectedSubscription.id);
       if ("error" in result) {
         setError(result.error);
         return;

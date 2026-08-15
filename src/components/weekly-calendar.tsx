@@ -53,6 +53,7 @@ type SubscriptionException = {
 };
 
 interface WeeklyCalendarProps {
+  tenantSlug: string;
   pitches: Pitch[];
   initialBookings: Booking[];
   subscriptions?: Subscription[];
@@ -67,6 +68,7 @@ interface SelectedSlot {
 }
 
 export default function WeeklyCalendar({
+  tenantSlug,
   pitches,
   initialBookings,
   subscriptions = [],
@@ -168,7 +170,7 @@ export default function WeeklyCalendar({
 
     setError(null);
     startTransition(async () => {
-      const result = await createBooking({
+      const result = await createBooking(tenantSlug, {
         pitchId: selectedPitch,
         date: format(selectedSlot.date, "yyyy-MM-dd"),
         startTime: selectedSlot.startTime,

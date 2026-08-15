@@ -1,18 +1,22 @@
 import Link from "next/link";
-import { getBusinessSettings } from "@/lib/data";
+import type { Tenant } from "@prisma/client";
 
-export default async function Navbar() {
-  const settings = await getBusinessSettings();
-  const businessName = settings?.name ?? "Halı Saha";
+type NavbarProps = {
+  tenantSlug: string;
+  settings: Pick<Tenant, "name" | "logoUrl">;
+};
+
+export default function Navbar({ tenantSlug, settings }: NavbarProps) {
+  const businessName = settings.name;
 
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-200/50 bg-white/80 backdrop-blur-md shadow-sm">
       <div className="container mx-auto px-2 sm:px-4 lg:px-8 h-14 sm:h-16 md:h-20 flex items-center min-w-0">
         <Link
-          href="/"
+          href={`/${tenantSlug}`}
           className="flex items-center gap-2 sm:gap-3 group min-w-0 transition-opacity hover:opacity-90 active:scale-[0.99]"
         >
-          {settings?.logoUrl ? (
+          {settings.logoUrl ? (
             <img
               src={settings.logoUrl}
               alt={businessName}

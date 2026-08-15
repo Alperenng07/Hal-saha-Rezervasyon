@@ -1,25 +1,29 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireTenantAdmin } from "@/lib/auth";
+import { tenantPaths } from "@/lib/tenant";
 import { revalidatePath } from "next/cache";
 import { startOfDay } from "date-fns";
 
 type ActionResult = { success: true } | { error: string };
 
-export async function createSubscription(input: {
-  pitchId: string;
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  startDate: string;
-  endDate?: string;
-  guestName: string;
-  guestPhone: string;
-  notes?: string;
-}): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin) return { error: "Yetkisiz işlem." };
+export async function createSubscription(
+  tenantSlug: string,
+  input: {
+    pitchId: string;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    startDate: string;
+    endDate?: string;
+    guestName: string;
+    guestPhone: string;
+    notes?: string;
+  }
+): Promise<ActionResult> {
+  const ctx = await requireTenantAdmin(tenantSlug);
+  if (!ctx) return { error: "Yetkisiz işlem." };
 
   const name = input.guestName.trim();
   const phone = input.guestPhone.trim();
@@ -30,7 +34,9 @@ export async function createSubscription(input: {
     return { error: "Geçersiz gün seçimi." };
   }
 
-  const pitch = await prisma.pitch.findUnique({ where: { id: input.pitchId } });
+  const pitch = await prisma.pitch.findFirst({
+    where: { id: input.pitchId, tenantId: ctx.tenant.id },
+  });
   if (!pitch) return { error: "Saha bulunamadı." };
 
   const startDate = new Date(input.startDate);
@@ -70,22 +76,29 @@ export async function createSubscription(input: {
     },
   });
 
-  revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/admin/subscriptions");
-  revalidatePath("/admin/calendar");
+  const paths = tenantPaths(tenantSlug);
+  revalidatePath(paths.site);
+  revalidatePath(paths.admin);
+  revalidatePath(paths.subscriptions);
+  revalidatePath(paths.calendar);
   return { success: true };
 }
 
-export async function skipSubscriptionOccurrence(input: {
-  subscriptionId: string;
-  date: string;
-}): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin) return { error: "Yetkisiz işlem." };
+export async function skipSubscriptionOccurrence(
+  tenantSlug: string,
+  input: {
+    subscriptionId: string;
+    date: string;
+  }
+): Promise<ActionResult> {
+  const ctx = await requireTenantAdmin(tenantSlug);
+  if (!ctx) return { error: "Yetkisiz işlem." };
 
-  const subscription = await prisma.subscription.findUnique({
-    where: { id: input.subscriptionId },
+  const subscription = await prisma.subscription.findFirst({
+    where: {
+      id: input.subscriptionId,
+      pitch: { tenantId: ctx.tenant.id },
+    },
   });
   if (!subscription || !subscription.isActive) {
     return { error: "Abonelik bulunamadı." };
@@ -116,18 +129,24 @@ export async function skipSubscriptionOccurrence(input: {
     return { error: "Bu hafta zaten iptal edilmiş olabilir." };
   }
 
-  revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/admin/subscriptions");
-  revalidatePath("/admin/calendar");
+  const paths = tenantPaths(tenantSlug);
+  revalidatePath(paths.site);
+  revalidatePath(paths.admin);
+  revalidatePath(paths.subscriptions);
+  revalidatePath(paths.calendar);
   return { success: true };
 }
 
-export async function deactivateSubscription(id: string): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin) return { error: "Yetkisiz işlem." };
+export async function deactivateSubscription(
+  tenantSlug: string,
+  id: string
+): Promise<ActionResult> {
+  const ctx = await requireTenantAdmin(tenantSlug);
+  if (!ctx) return { error: "Yetkisiz işlem." };
 
-  const sub = await prisma.subscription.findUnique({ where: { id } });
+  const sub = await prisma.subscription.findFirst({
+    where: { id, pitch: { tenantId: ctx.tenant.id } },
+  });
   if (!sub) return { error: "Abonelik bulunamadı." };
 
   await prisma.subscription.update({
@@ -135,9 +154,10 @@ export async function deactivateSubscription(id: string): Promise<ActionResult> 
     data: { isActive: false },
   });
 
-  revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/admin/subscriptions");
-  revalidatePath("/admin/calendar");
+  const paths = tenantPaths(tenantSlug);
+  revalidatePath(paths.site);
+  revalidatePath(paths.admin);
+  revalidatePath(paths.subscriptions);
+  revalidatePath(paths.calendar);
   return { success: true };
 }

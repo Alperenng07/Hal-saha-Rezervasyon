@@ -1,17 +1,25 @@
+import { notFound } from "next/navigation";
 import {
-  getBookings,
-  getActiveSubscriptions,
-  getSubscriptionExceptions,
+  getBookingsForTenant,
+  getActiveSubscriptionsForTenant,
+  getSubscriptionExceptionsForTenant,
+  getTenantSettings,
 } from "@/lib/data";
 import { getAllPitchesAdmin } from "@/lib/actions/pitches";
 import AdminWeeklyCalendar from "@/components/admin-weekly-calendar";
 
-export default async function AdminCalendarPage() {
+type Props = { params: Promise<{ tenant: string }> };
+
+export default async function AdminCalendarPage({ params }: Props) {
+  const { tenant: tenantSlug } = await params;
+  const settings = await getTenantSettings(tenantSlug);
+  if (!settings) notFound();
+
   const [bookings, subscriptions, subscriptionExceptions, pitches] = await Promise.all([
-    getBookings(),
-    getActiveSubscriptions(),
-    getSubscriptionExceptions(),
-    getAllPitchesAdmin(),
+    getBookingsForTenant(settings.id),
+    getActiveSubscriptionsForTenant(settings.id),
+    getSubscriptionExceptionsForTenant(settings.id),
+    getAllPitchesAdmin(tenantSlug),
   ]);
 
   const activePitches = pitches.filter((pitch) => pitch.isActive);
@@ -31,6 +39,7 @@ export default async function AdminCalendarPage() {
         </div>
       ) : (
         <AdminWeeklyCalendar
+          tenantSlug={tenantSlug}
           pitches={activePitches}
           initialBookings={bookings}
           subscriptions={subscriptions}
