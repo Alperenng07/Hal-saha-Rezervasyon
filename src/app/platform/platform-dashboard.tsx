@@ -3,16 +3,32 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createTenant, listTenantsForPlatform, setTenantActive } from "@/lib/actions/tenants";
+import {
+  createTenant,
+  createTenantsBulk,
+  listTenantsForPlatform,
+  setTenantActive,
+} from "@/lib/actions/tenants";
+import { DEFAULT_PITCH_TEMPLATE } from "@/lib/default-pitch-template";
 import { tenantPaths } from "@/lib/tenant-paths";
 import { signOutPlatform } from "@/lib/actions/platform-auth";
 
 type TenantRow = Awaited<ReturnType<typeof listTenantsForPlatform>>[number];
 
+function readPitchTemplate(form: FormData) {
+  return {
+    name: (form.get("pitchName") as string) || undefined,
+    openTime: (form.get("openTime") as string) || undefined,
+    closeTime: (form.get("closeTime") as string) || undefined,
+    slotDurationMinutes: Number(form.get("slotDurationMinutes") || 60),
+  };
+}
+
 export default function PlatformDashboard() {
   const router = useRouter();
   const [tenants, setTenants] = useState<TenantRow[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [bulkResult, setBulkResult] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const loadTenants = () => {
@@ -37,6 +53,8 @@ export default function PlatformDashboard() {
         slug: (form.get("slug") as string) || undefined,
         adminEmail: form.get("adminEmail") as string,
         phone: (form.get("phone") as string) || undefined,
+        themeColor: (form.get("themeColor") as string) || undefined,
+        pitchTemplate: readPitchTemplate(form),
       });
 
       if ("error" in result) {
@@ -44,6 +62,40 @@ export default function PlatformDashboard() {
         return;
       }
 
+      (e.target as HTMLFormElement).reset();
+      loadTenants();
+      router.refresh();
+    });
+  };
+
+  const handleBulkCreate = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setBulkResult(null);
+    setError(null);
+    const form = new FormData(e.currentTarget);
+    const bulkText = form.get("bulkText") as string;
+
+    startTransition(async () => {
+      const result = await createTenantsBulk(bulkText, readPitchTemplate(form));
+
+      if ("error" in result) {
+        setError(result.error);
+        return;
+      }
+
+      const summary = [
+        `${result.created.length} işletme oluşturuldu.`,
+        result.failed.length > 0
+          ? `${result.failed.length} satır başarısız: ${result.failed
+              .slice(0, 3)
+              .map((f) => f.error)
+              .join("; ")}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      setBulkResult(summary);
       (e.target as HTMLFormElement).reset();
       loadTenants();
       router.refresh();
@@ -73,48 +125,130 @@ export default function PlatformDashboard() {
 
       <main className="max-w-5xl mx-auto p-4 sm:p-8 space-y-8">
         <section className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Yeni İşletme Ekle</h2>
-          <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <input
-              name="name"
-              required
-              placeholder="İşletme adı"
-              className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
-            />
-            <input
-              name="slug"
-              placeholder="URL kodu (opsiyonel, örn: abc-halisaha)"
-              className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
-            />
-            <input
-              name="adminEmail"
-              type="email"
-              required
-              placeholder="Admin e-postası"
-              className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
-            />
-            <input
-              name="phone"
-              placeholder="Telefon (opsiyonel)"
-              className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
-            />
-            <div className="sm:col-span-2">
-              <button
-                type="submit"
-                disabled={isPending}
-                className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg font-semibold text-sm disabled:opacity-60"
-              >
-                {isPending ? "Ekleniyor..." : "İşletme Oluştur"}
-              </button>
-            </div>
-          </form>
-          {error && (
-            <p className="mt-3 text-sm text-red-600">{error}</p>
-          )}
-          <p className="mt-3 text-xs text-slate-500">
-            Admin e-postası Supabase&apos;de kayıtlı olmalıdır. İşletme linki:{" "}
-            <code className="bg-slate-100 px-1 rounded">/isletme-kodu</code>
+          <h2 className="text-lg font-bold text-slate-900 mb-1">Yeni İşletme Ekle</h2>
+          <p className="text-sm text-slate-500 mb-4">
+            Oluşturulunca varsayılan saha otomatik eklenir — hemen rezervasyona açılır.
           </p>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input
+                name="name"
+                required
+                placeholder="İşletme adı"
+                className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+              />
+              <input
+                name="slug"
+                placeholder="URL kodu (opsiyonel)"
+                className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+              />
+              <input
+                name="adminEmail"
+                type="email"
+                required
+                placeholder="Admin e-postası"
+                className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+              />
+              <input
+                name="phone"
+                placeholder="Telefon (opsiyonel)"
+                className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+              />
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+              <p className="text-sm font-semibold text-slate-800">Varsayılan saha şablonu</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <input
+                  name="pitchName"
+                  defaultValue={DEFAULT_PITCH_TEMPLATE.name}
+                  placeholder="Saha adı"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white"
+                />
+                <input
+                  name="openTime"
+                  defaultValue={DEFAULT_PITCH_TEMPLATE.openTime}
+                  placeholder="Açılış"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white"
+                />
+                <input
+                  name="closeTime"
+                  defaultValue={DEFAULT_PITCH_TEMPLATE.closeTime}
+                  placeholder="Kapanış"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white"
+                />
+                <input
+                  name="slotDurationMinutes"
+                  type="number"
+                  min={15}
+                  max={240}
+                  defaultValue={DEFAULT_PITCH_TEMPLATE.slotDurationMinutes}
+                  placeholder="Seans dk"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isPending}
+              className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg font-semibold text-sm disabled:opacity-60"
+            >
+              {isPending ? "Ekleniyor..." : "İşletme Oluştur"}
+            </button>
+          </form>
+          {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        </section>
+
+        <section className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
+          <h2 className="text-lg font-bold text-slate-900 mb-1">Toplu İşletme Ekle</h2>
+          <p className="text-sm text-slate-500 mb-4">
+            Her satır: <code className="bg-slate-100 px-1 rounded">İşletme Adı, url-kodu, admin@email.com</code>
+            <br />
+            URL kodu opsiyonel — boş bırakılırsa isimden üretilir.
+          </p>
+          <form onSubmit={handleBulkCreate} className="space-y-4">
+            <textarea
+              name="bulkText"
+              rows={6}
+              placeholder={`Yeşil Saha, yesil-saha, admin1@mail.com\nMavi Halı, , admin2@mail.com`}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-mono"
+            />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <input
+                name="pitchName"
+                defaultValue={DEFAULT_PITCH_TEMPLATE.name}
+                placeholder="Saha adı"
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                name="openTime"
+                defaultValue={DEFAULT_PITCH_TEMPLATE.openTime}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                name="closeTime"
+                defaultValue={DEFAULT_PITCH_TEMPLATE.closeTime}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+              <input
+                name="slotDurationMinutes"
+                type="number"
+                min={15}
+                max={240}
+                defaultValue={DEFAULT_PITCH_TEMPLATE.slotDurationMinutes}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="px-5 py-2.5 bg-slate-900 text-white rounded-lg font-semibold text-sm disabled:opacity-60"
+            >
+              {isPending ? "İçe aktarılıyor..." : "Toplu Oluştur"}
+            </button>
+          </form>
+          {bulkResult && <p className="mt-3 text-sm text-emerald-700">{bulkResult}</p>}
         </section>
 
         <section className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
